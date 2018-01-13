@@ -31,8 +31,8 @@ public class Robot extends IterativeRobot {
 	public static final double kPulsesPerRevolution = 1024; // for an AS5145B
 															// Magnetic Encoder
 	public static final double kDistancePerPulse = kDistancePerRevolution / kPulsesPerRevolution;
-	private Encoder leftEncoder = new Encoder(0, 1, false, EncodingType.k4X);
-	private Encoder rightEncoder = new Encoder(2, 3, true, EncodingType.k4X);
+	private Encoder leftEncoder = new Encoder(0, 1, true, EncodingType.k4X);
+	private Encoder rightEncoder = new Encoder(2, 3, false, EncodingType.k4X);
 	private RobotDrive drive = new RobotDrive(1, 2);
 
 	Timer autoTime = new Timer();
@@ -75,15 +75,30 @@ public class Robot extends IterativeRobot {
 			_climber.set(_joy.getRawAxis(3) * -1.0);
 		}
 		
-		//encoder logoic
+		
+		//encoder logic
+		if (_joy.getRawButton(2) == true)
+		{
+			leftEncoder.reset();
+			rightEncoder.reset();
+		}
 		SmartDashboard.putNumber("encoderL", leftEncoder.getDistance());
 		SmartDashboard.putNumber("encoderR", rightEncoder.getDistance());
+		
+		// Display button values
+		SmartDashboard.putBoolean("button1", _joy.getRawButton(1));
+		SmartDashboard.putBoolean("button2", _joy.getRawButton(2));
 	}
 
-	// public void autonomousInit(){
-	// If (autonomousCommand != null) autonomousCommand.start();
-
-	// }
+	public void autonomousInit()
+	{
+		SmartDashboard.putString("statusInit", "Initialize auton");
+	}
+	
+	public void autonomousPeriodic()
+	{
+		SmartDashboard.putString("status", "Auton periodic");
+	}
 
 	// public void autonomous() {
 	// autoTime.start();
