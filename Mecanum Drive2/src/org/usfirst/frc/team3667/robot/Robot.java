@@ -11,6 +11,9 @@ import edu.wpi.first.wpilibj.drive.RobotDriveBase;
 import edu.wpi.first.wpilibj.drive.RobotDriveBase.MotorType;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.command.Command;
+import edu.wpi.first.wpilibj.command.Scheduler;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 //import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 //import com.analog.adis16448.frc.ADIS16448_IMU;
@@ -26,7 +29,8 @@ import edu.wpi.first.wpilibj.IterativeRobot;
  * directory.
  */
 public class Robot extends IterativeRobot {
-	// Command autonomousCommand;
+	Command autonomousCommand;
+	SendableChooser autoChooser;
 
 	// gyro variables
 	// private Gyro gyro;
@@ -61,6 +65,11 @@ public class Robot extends IterativeRobot {
 		rightEncoder.setDistancePerPulse(kDistancePerPulse);
 		leftEncoder.reset();
 		rightEncoder.reset();
+		
+		autoChooser = new SendableChooser();
+		autoChooser.addDefault("Default program", new Pickup());
+		autoChooser.addObject("Experimental auto", new ElevatorPickup());
+		SmartDashboard.putData("Autonomous mode chooser", autoChooser);
 
 	}
 
@@ -96,10 +105,13 @@ public class Robot extends IterativeRobot {
 	}
 
 	public void autonomousInit() {
-		SmartDashboard.putString("statusInit", "Initialize auton");
+		autonomousCommand = (Command) autoChooser.getSelected();
+		autonomousCommand.start();
 	}
 
 	public void autonomousPeriodic() {
+		Scheduler.getInstance().run();
+		
 		int sdNum = 0;
 		//Sendable sdNum = SmartDashboard.getData("Decision");
 		switch (sdNum) {
