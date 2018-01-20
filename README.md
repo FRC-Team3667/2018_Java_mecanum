@@ -1,1 +1,2 @@
-# 2018_Java_mecanum
+# 2018 Java mecanum
+The robot code for 2018.
