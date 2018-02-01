@@ -47,7 +47,9 @@ public class Robot extends IterativeRobot {
 	WPI_TalonSRX _frontRightMotor = new WPI_TalonSRX(12);
 	WPI_TalonSRX _rearRightMotor = new WPI_TalonSRX(11);
 	WPI_TalonSRX _rearLeftMotor = new WPI_TalonSRX(10);
-	WPI_TalonSRX _climber = new WPI_TalonSRX(14);
+	
+	WPI_TalonSRX _rRoll = new WPI_TalonSRX(15);
+	WPI_TalonSRX _lRoll = new WPI_TalonSRX(14);
 	MecanumDrive _drive = new MecanumDrive(_frontLeftMotor, _rearLeftMotor, _frontRightMotor, _rearRightMotor);
 	Joystick _joy = new Joystick(0);
 	Joystick _climberJoy = new Joystick(1);
@@ -80,9 +82,11 @@ public class Robot extends IterativeRobot {
 
 		_drive.driveCartesian(_joy.getRawAxis(0), _joy.getRawAxis(1), _joy.getRawAxis(4), 0);
 		if (_joy.getRawAxis(2) != 0) {
-			_climber.set(_joy.getRawAxis(2));
+			_lRoll.set(_joy.getRawAxis(2));
+			_rRoll.set(_joy.getRawAxis(2));
 		} else {
-			_climber.set(_joy.getRawAxis(3) * -1.0);
+			_lRoll.set(_joy.getRawAxis(3) * -1.0);
+			_rRoll.set(_joy.getRawAxis(3) * -1.0);
 		}
 
 		// encoder logic
@@ -126,7 +130,6 @@ public class Robot extends IterativeRobot {
 		}
 		case 1: 
 			{
-				
 				break;
 			}
 		}
