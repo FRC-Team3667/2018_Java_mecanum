@@ -39,9 +39,16 @@ public class Robot extends IterativeRobot {
 		FORWARD, REVERSE, LEFT, RIGHT
 	};
 
+	public enum AutonPlays {
+		LEFTSWITCH, RIGHTSWITCH, LEFTSCALE, RIGHTSCALE, CENTERSWITCHR, CENTERSWITCHL, SWITCHSCALER, SWITCHSCALEL
+	};
+
 	public static final double kDistancePerPulse = kDistancePerRevolution / kPulsesPerRevolution;
 	private Encoder leftEncoder = new Encoder(0, 1, true, EncodingType.k4X);
 	private Encoder rightEncoder = new Encoder(2, 3, false, EncodingType.k4X);
+	private Encoder speedTestEncoder = new Encoder(4, 5, false, EncodingType.k4X);
+	// Search US Digital Encoder FRC Java E4P Encoder
+
 	Timer autoTime = new Timer();
 	CANTalon _frontLeftMotor = new CANTalon(13);
 	CANTalon _frontRightMotor = new CANTalon(12);
@@ -74,6 +81,7 @@ public class Robot extends IterativeRobot {
 		rightEncoder.setDistancePerPulse(kDistancePerPulse);
 		leftEncoder.reset();
 		rightEncoder.reset();
+		speedTestEncoder.reset();
 
 		// autoChooser = new SendableChooser();
 		// autoChooser.addDefault("Default program", new Pickup());
@@ -101,12 +109,17 @@ public class Robot extends IterativeRobot {
 		}
 		// reset auton
 		if (_joy.getRawButton(3)) {
-			autonStep = 1;
-			lastValidDirection = 0;
+			initAndResetAll();
 		}
 	}
 
+	// No code to be added in autonomousInit - Instead add code to
+	// initAndResetAll
 	public void autonomousInit() {
+		initAndResetAll();
+	}
+
+	private void initAndResetAll() {
 		// if (autoChooser.getSelected() != null) {
 		// autonomousCommand = (Command) autoChooser.getSelected();
 		// autonomousCommand.start();
@@ -114,71 +127,308 @@ public class Robot extends IterativeRobot {
 		imu.reset();
 		leftEncoder.reset();
 		rightEncoder.reset();
+		speedTestEncoder.reset();
 		autonStep = 1;
 		lastValidDirection = 0;
 	}
 
 	public void autonomousPeriodic() {
+		// Update the Smart Dashboard Data
+		updateSmartDashboardData();
+		// Nothing else should go here
 		executeAutonomousCommandCompendium();
 	}
 
 	public void testAutonomousPeriodic() {
 		executeAutonomousCommandCompendium();
 	}
-	
-	private void executeAutonomousCommandCompendium() {
-		// Update the Smart Dashboard Data
-		updateSmartDashboardData();
 
-		int planNum = 1;
-		switch (planNum) {
-		case 0: {
-			if (Timer.getMatchTime() > 10.5) {
-				adjustedDrive(0, -.3, 0, 0);
-			} else if (Timer.getMatchTime() > 9.75) {
-				adjustedDrive(0, 0, 0.5, 0);
-			} else {
-				adjustedDrive(0, -.1, 0, 0);
-			}
+	private void executeAutonomousCommandCompendium() {
+		// This is the 3667 play book for Autonomous options
+		AutonPlays curPlay = AutonPlays.CENTERSWITCHR;
+		switch (curPlay) {
+		case LEFTSCALE:
+			leftScale();
 			break;
-		}
-		case 1:
-			// Elvis' Autonomous Motion Solution MkII: New And Improved, Brand
-			// Spanking New (TM)
-			switch (autonStep) {
-			case 1:
-				driveRobot(Direction.FORWARD, 60, 30);
-				autonStep++;
-			case 2:
-				turnRobot(Direction.LEFT, 30, 50);
-				autonStep++;
-			case 3:
-				driveRobot(Direction.FORWARD, 60, 20);
-				autonStep++;
-			case 4:
-				turnRobot(Direction.RIGHT, 60, 50);
-				autonStep++;
-			case 5:
-				driveRobot(Direction.FORWARD, 60, 20);
-				autonStep++;
-			case 6:
-				turnRobot(Direction.LEFT, 60, 50);
-				autonStep++;
-			case 7:
-				driveRobot(Direction.FORWARD, 60, 20);
-				autonStep++;
-			case 8:
-				turnRobot(Direction.RIGHT, 210, 50);
-				autonStep++;
-			case 9:
-				driveRobot(Direction.FORWARD, 60, 60);
-				autonStep++;
-				break;
-			}
+		case LEFTSWITCH:
+			leftSwitch();
+			break;
+		case RIGHTSCALE:
+			rightScale();
+			break;
+		case RIGHTSWITCH:
+			rightSwitch();
+			break;
+		case CENTERSWITCHR:
+			centerSwitchR();
+			break;
+		case CENTERSWITCHL:
+			centerSwitchL();
+			break;
+		case SWITCHSCALER:
+			switchScaleR();
+			break;
+		case SWITCHSCALEL:
+			switchScaleL();
+			break;
+		default:
+			break;
 		}
 	}
 
-	
+	private void switchScaleR() {
+		switch (autonStep) {
+		case 1:
+			// drives toward Switch 
+			driveRobot(Direction.FORWARD, 55, 60); 
+			autonStep++;
+			break;
+		case 2:
+			// Turns 90 Degrees toward Switch
+			turnRobot(Direction.LEFT, 90, 60); 
+			autonStep++;
+			break;
+		case 3:
+			// Moves toward Switch, Closes distance between to drop Cube
+			driveRobot(Direction.FORWARD, 10, 60);
+			autonStep++;
+			break;
+		case 4:
+			//Pause to deliver Cube
+			waitRobot(2);
+			autonStep++;
+			break;
+		case 5:
+			// Moves away from switch
+			driveRobot(Direction.REVERSE, 10, 60); 
+			autonStep++;
+			break;
+		case 6:
+			// turns 90 Degrees getting ready to pick up a Cube
+			turnRobot(Direction.RIGHT, 90, 60); 
+			autonStep++;
+			break;
+		case 7:
+			// drives toward cube
+			driveRobot(Direction.FORWARD, 13, 60);
+			autonStep++;
+			break;
+		case 8:
+			//turns 90 Degrees to Cube
+			turnRobot(Direction.LEFT, 90, 60);
+			autonStep++;
+			break;
+		case 9:
+			//Drives toward cube even more
+			driveRobot(Direction.FORWARD, 13, 60);
+			autonStep++;
+			break;
+		case 10:
+			//Pause to deliver Cube
+			waitRobot(2);
+			autonStep++;
+			break;
+		case 11:
+			//Moves away getting ready to head for Scale
+			driveRobot(Direction.REVERSE, 13, 60);
+			autonStep++;
+			break;
+		case 12:
+			//Turns toward Scale
+			turnRobot(Direction.RIGHT, 90, 60);
+			autonStep++;
+			break;
+		case 13:
+			//Moves toward Scale
+			driveRobot(Direction.FORWARD, 40, 60);
+			autonStep++;
+			break;
+		case 14:
+			//Turns toward Scale
+			turnRobot(Direction.LEFT, 90, 60);
+			autonStep++;
+			break;
+		case 15:
+			//Drives toward Scale, Closes distance between to drop Cube
+			driveRobot(Direction.FORWARD, 10, 60);
+			autonStep++;
+			break;
+		case 16:
+			//Pause to deliver Cube
+			waitRobot(2);
+			autonStep++;
+			break;
+		}
+	}
+
+	private void switchScaleL() {
+		switch (autonStep) {
+		case 1:
+			driveRobot(Direction.FORWARD, 55, 60);
+			autonStep++;
+			break;
+		case 2:
+			turnRobot(Direction.RIGHT, 90, 60);
+			autonStep++;
+			break;
+		case 3:
+			driveRobot(Direction.FORWARD, 10, 60);
+			autonStep++;
+			break;
+		case 4:
+			driveRobot(Direction.REVERSE, 10, 60);
+			autonStep++;
+			break;
+		case 5:
+			turnRobot(Direction.LEFT, 90, 60);
+			autonStep++;
+			break;
+		case 6:
+			driveRobot(Direction.FORWARD, 13, 60);
+			autonStep++;
+			break;
+		case 7:
+			turnRobot(Direction.RIGHT, 90, 60);
+			autonStep++;
+			break;
+		case 8:
+			driveRobot(Direction.FORWARD, 13, 60);
+			autonStep++;
+			break;
+		case 9:
+			driveRobot(Direction.REVERSE, 13, 60);
+			autonStep++;
+			break;
+		case 10:
+			turnRobot(Direction.LEFT, 90, 60);
+			autonStep++;
+			break;
+		case 11:
+			driveRobot(Direction.FORWARD, 40, 60);
+			autonStep++;
+			break;
+		case 12:
+			turnRobot(Direction.RIGHT, 90, 60);
+			autonStep++;
+			break;
+		case 13:
+			driveRobot(Direction.FORWARD, 10, 60);
+			autonStep++;
+			break;
+
+		}
+	}
+
+	private void centerSwitchR() {
+		switch (autonStep) {
+		case 1:
+			driveRobot(Direction.FORWARD, 5, 60);
+			autonStep++;
+			break;
+		case 2:
+			turnRobot(Direction.RIGHT, 40, 60);
+			autonStep++;
+			break;
+		case 3:
+			driveRobot(Direction.FORWARD, 30, 60);
+			autonStep++;
+			break;
+		case 4:
+			turnRobot(Direction.LEFT, 50, 60);
+			autonStep++;
+			break;
+		case 5:
+			driveRobot(Direction.FORWARD, 10, 30);
+			autonStep++;
+			break;
+		}
+	}
+
+	private void centerSwitchL() {
+		switch (autonStep) {
+		case 1:
+			driveRobot(Direction.FORWARD, 5, 60);
+			autonStep++;
+			break;
+		case 2:
+			turnRobot(Direction.LEFT, 40, 60);
+			autonStep++;
+			break;
+		case 3:
+			driveRobot(Direction.FORWARD, 30, 60);
+			autonStep++;
+			break;
+		case 4:
+			turnRobot(Direction.RIGHT, 50, 60);
+			autonStep++;
+			break;
+		case 5:
+			driveRobot(Direction.FORWARD, 10, 30);
+			autonStep++;
+			break;
+		}
+	}
+
+	private void leftScale() {
+		switch (autonStep) {
+		case 1:
+			driveRobot(Direction.FORWARD, 115, 60);
+			autonStep++;
+			break;
+		case 2:
+			turnRobot(Direction.RIGHT, 90, 60);
+			autonStep++;
+			break;
+		}
+	}
+
+	private void rightScale() {
+		switch (autonStep) {
+		case 1:
+			driveRobot(Direction.FORWARD, 115, 60);
+			autonStep++;
+			break;
+		case 2:
+			turnRobot(Direction.LEFT, 90, 60);
+			autonStep++;
+			break;
+		}
+	}
+
+	private void leftSwitch() {
+		switch (autonStep) {
+		case 1:
+			driveRobot(Direction.FORWARD, 55, 60);
+			autonStep++;
+			break;
+		case 2:
+			turnRobot(Direction.RIGHT, 90, 100);
+			autonStep++;
+			break;
+		case 3:
+			driveRobot(Direction.FORWARD, 10, 20);
+			autonStep++;
+			break;
+		}
+	}
+
+	private void rightSwitch() {
+		switch (autonStep) {
+		case 1:
+			driveRobot(Direction.FORWARD, 55, 60);
+			autonStep++;
+			break;
+		case 2:
+			turnRobot(Direction.LEFT, 90, 100);
+			autonStep++;
+			break;
+		case 3:
+			driveRobot(Direction.FORWARD, 10, 20);
+			autonStep++;
+			break;
+		}
+	}
+
 	private void driveRobot(Direction driveDirection, double distance, double powerPercent) {
 		double startingLeftEncoder = leftEncoder.getDistance();
 		double startingRightEncoder = rightEncoder.getDistance();
@@ -193,8 +443,8 @@ public class Robot extends IterativeRobot {
 		case LEFT: // No action
 			break;
 		case REVERSE:
-			while (leftEncoder.getDistance() <= startingLeftEncoder - distance
-					&& rightEncoder.getDistance() <= startingRightEncoder - distance) {
+			while (leftEncoder.getDistance() >= startingLeftEncoder - distance
+					&& rightEncoder.getDistance() >= startingRightEncoder - distance) {
 				_drive.mecanumDrive_Cartesian(0, powerPercent * .01, 0, 0);
 			}
 			break;
@@ -206,11 +456,19 @@ public class Robot extends IterativeRobot {
 	}
 
 	private void turnRobot(Direction driveDirection, double turnDegrees, double powerPercent) {
+		// Let's cap the power percent to prevent issues
+		if (powerPercent > 50) {
+			powerPercent = 50;
+		} else if (powerPercent < 20) {
+			powerPercent = 20;
+		}
+		double turnDegree = 0;
+		double targetDegree = 0;
 		switch (driveDirection) {
 		case FORWARD: // No action
 			break;
 		case LEFT:
-			double targetDegree = lastValidDirection - turnDegrees;
+			targetDegree = lastValidDirection - turnDegrees;
 			while (targetDegree < imu.getAngleZ()) {
 				SmartDashboard.putNumber("target Degree", targetDegree);
 				// check if within 10 degrees and if so slow turn
@@ -222,11 +480,15 @@ public class Robot extends IterativeRobot {
 				}
 			}
 			lastValidDirection -= turnDegrees;
+			// If we overshot on the turn, than correct
+			while (lastValidDirection > imu.getAngleZ()) {
+				_drive.mecanumDrive_Cartesian(0, 0, .25, 0);
+			}
 			break;
 		case REVERSE: // No action
 			break;
 		case RIGHT:
-			double turnDegree = lastValidDirection + turnDegrees;
+			turnDegree = lastValidDirection + turnDegrees;
 			while (turnDegree > imu.getAngleZ()) {
 				// check if within 10 degrees and if so slow turn
 				if (Math.abs(turnDegree - imu.getAngleZ()) > 10) {
@@ -237,6 +499,10 @@ public class Robot extends IterativeRobot {
 				}
 			}
 			lastValidDirection += turnDegrees;
+			// If we overshot on the turn, than correct
+			while (lastValidDirection < imu.getAngleZ()) {
+				_drive.mecanumDrive_Cartesian(0, 0, -.25, 0);
+			}
 			break;
 		default:
 			break;
@@ -333,5 +599,18 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("actual Degree", imu.getAngleZ());
 		SmartDashboard.putNumber("Auton Step", autonStep);
 		SmartDashboard.putNumber("Timer", Timer.getMatchTime());
+		SmartDashboard.putNumber("Test Encoder Distance Value", speedTestEncoder.getDistance());
+		SmartDashboard.putNumber("Test Encoder Rate Value", speedTestEncoder.getRate());
+		SmartDashboard.putNumber("Test Encoder Count", speedTestEncoder.get());
+		SmartDashboard.putNumber("Test Encoder Raw", speedTestEncoder.getRaw());
 	}
+
+	private void waitRobot(double waitTime) {
+		// TODO Auto-generated method stub
+		double resumeTime = Timer.getMatchTime() - waitTime;
+		while (Timer.getMatchTime() > resumeTime) {
+			// Do nothing
+		}
+	}
+
 }
