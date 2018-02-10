@@ -40,13 +40,17 @@ public class Robot extends IterativeRobot {
 	};
 
 	public enum AutonPlays {
-		LEFTSWITCH, RIGHTSWITCH, LEFTSCALE, RIGHTSCALE, CENTERSWITCHR, CENTERSWITCHL, SWITCHSCALER, SWITCHSCALEL
+		LEFTSWITCH, RIGHTSWITCH, LEFTSCALE, RIGHTSCALE, CENTERSWITCHR, CENTERSWITCHL, SWITCHSCALER, SWITCHSCALEL, SCALESWITCHR, SCALESWITCHL, SCALESCALEL, SWITCHSWITCHL, SWITCHSWITCHR, SCALESCALER
+	};
+
+	public enum Action {
+		UP, DOWN, OUTTAKE, INTAKE
 	};
 
 	public static final double kDistancePerPulse = kDistancePerRevolution / kPulsesPerRevolution;
 	private Encoder leftEncoder = new Encoder(0, 1, true, EncodingType.k4X);
 	private Encoder rightEncoder = new Encoder(2, 3, false, EncodingType.k4X);
-	private Encoder speedTestEncoder = new Encoder(4, 5, false, EncodingType.k4X);
+	private Encoder speedTestEncoder = new Encoder(5, 4, false, EncodingType.k4X);
 	// Search US Digital Encoder FRC Java E4P Encoder
 
 	Timer autoTime = new Timer();
@@ -79,6 +83,7 @@ public class Robot extends IterativeRobot {
 		// start of encoders
 		leftEncoder.setDistancePerPulse(kDistancePerPulse);
 		rightEncoder.setDistancePerPulse(kDistancePerPulse);
+		speedTestEncoder.setDistancePerPulse(kDistancePerPulse);
 		leftEncoder.reset();
 		rightEncoder.reset();
 		speedTestEncoder.reset();
@@ -145,7 +150,7 @@ public class Robot extends IterativeRobot {
 
 	private void executeAutonomousCommandCompendium() {
 		// This is the 3667 play book for Autonomous options
-		AutonPlays curPlay = AutonPlays.CENTERSWITCHR;
+		AutonPlays curPlay = AutonPlays.SWITCHSWITCHL;
 		switch (curPlay) {
 		case LEFTSCALE:
 			leftScale();
@@ -168,93 +173,266 @@ public class Robot extends IterativeRobot {
 		case SWITCHSCALER:
 			switchScaleR();
 			break;
-		case SWITCHSCALEL:
-			switchScaleL();
+		case SCALESWITCHR:
+			scaleSwitchR();
+			break;
+		case SCALESWITCHL:
+			scaleSwitchL();
+			break;
+		case SCALESCALEL:
+			scaleScaleL();
+			break;
+		case SCALESCALER:
+			scaleScaleR();
+			break;
+		case SWITCHSWITCHL:
+			switchSwitchL();
+			break;
+		case SWITCHSWITCHR:
+			switchSwitchR();
 			break;
 		default:
 			break;
 		}
 	}
 
-	private void switchScaleR() {
+	private void switchSwitchR() {
 		switch (autonStep) {
 		case 1:
-			// drives toward Switch 
-			driveRobot(Direction.FORWARD, 55, 60); 
+			driveRobot(Direction.FORWARD, 55, 60);
 			autonStep++;
 			break;
 		case 2:
-			// Turns 90 Degrees toward Switch
-			turnRobot(Direction.LEFT, 90, 60); 
+			turnRobot(Direction.LEFT, 90, 60);
 			autonStep++;
 			break;
 		case 3:
-			// Moves toward Switch, Closes distance between to drop Cube
 			driveRobot(Direction.FORWARD, 10, 60);
 			autonStep++;
 			break;
 		case 4:
-			//Pause to deliver Cube
 			waitRobot(2);
 			autonStep++;
 			break;
 		case 5:
-			// Moves away from switch
-			driveRobot(Direction.REVERSE, 10, 60); 
+			driveRobot(Direction.REVERSE, 10, 60);
 			autonStep++;
 			break;
 		case 6:
-			// turns 90 Degrees getting ready to pick up a Cube
-			turnRobot(Direction.RIGHT, 90, 60); 
+			turnRobot(Direction.RIGHT, 90, 60);
 			autonStep++;
 			break;
 		case 7:
-			// drives toward cube
 			driveRobot(Direction.FORWARD, 13, 60);
 			autonStep++;
 			break;
 		case 8:
-			//turns 90 Degrees to Cube
 			turnRobot(Direction.LEFT, 90, 60);
 			autonStep++;
 			break;
 		case 9:
-			//Drives toward cube even more
 			driveRobot(Direction.FORWARD, 13, 60);
 			autonStep++;
 			break;
 		case 10:
-			//Pause to deliver Cube
+			turnRobot(Direction.RIGHT, 90, 60);
+			autonStep++;
+			break;
+		case 11:
+			driveRobot(Direction.FORWARD, 10, 60);
+			autonStep++;
+			break;
+		case 12:
+			driveRobot(Direction.REVERSE, 10, 60);
+			autonStep++;
+			break;
+		case 13:
+			turnRobot(Direction.RIGHT, 90, 60);
+			autonStep++;
+			break;
+		case 14:
+			driveRobot(Direction.FORWARD, 13, 60);
+			autonStep++;
+			break;
+		case 15:
+			turnRobot(Direction.LEFT, 90, 60);
+			autonStep++;
+			break;
+		case 16:
+			driveRobot(Direction.FORWARD, 10, 60);
+			autonStep++;
+			break;
+		case 17:
+			waitRobot(2);
+			autonStep++;
+			break;
+		}
+	}
+
+	private void switchSwitchL() {
+		switch (autonStep) {
+		case 1:
+			driveRobot(Direction.FORWARD, 55, 60);
+			autonStep++;
+			break;
+		case 2:
+			turnRobot(Direction.RIGHT, 90, 60);
+			autonStep++;
+			break;
+		case 3:
+			driveRobot(Direction.FORWARD, 10, 60);
+			autonStep++;
+			break;
+		case 4:
+			waitRobot(2);
+			autonStep++;
+			break;
+		case 5:
+			driveRobot(Direction.REVERSE, 10, 60);
+			autonStep++;
+			break;
+		case 6:
+			turnRobot(Direction.LEFT, 90, 60);
+			autonStep++;
+			break;
+		case 7:
+			driveRobot(Direction.FORWARD, 13, 60);
+			autonStep++;
+			break;
+		case 8:
+			turnRobot(Direction.LEFT, 90, 60);
+			autonStep++;
+			break;
+		case 9:
+			driveRobot(Direction.FORWARD, 13, 60);
+			autonStep++;
+			break;
+		case 10:
+			turnRobot(Direction.LEFT, 90, 60);
+			autonStep++;
+			break;
+		case 11:
+			driveRobot(Direction.FORWARD, 10, 60);
+			autonStep++;
+			break;
+		case 12:
+			driveRobot(Direction.REVERSE, 10, 60);
+			autonStep++;
+			break;
+		case 13:
+			turnRobot(Direction.LEFT, 90, 60);
+			autonStep++;
+			break;
+		case 14:
+			driveRobot(Direction.FORWARD, 13, 60);
+			autonStep++;
+			break;
+		case 15:
+			turnRobot(Direction.RIGHT, 90, 60);
+			autonStep++;
+			break;
+		case 16:
+			driveRobot(Direction.FORWARD, 10, 60);
+			autonStep++;
+			break;
+		case 17:
+			waitRobot(2);
+			autonStep++;
+			break;
+		}
+	}
+
+	private void scaleScaleR() {
+		switch (autonStep) {
+		case 1:
+
+		}
+	}
+
+	private void scaleScaleL() {
+		switch (autonStep) {
+		case 1:
+
+		}
+	}
+
+	private void scaleSwitchL() {
+		switch (autonStep) {
+		case 1:
+
+		}
+	}
+
+	private void scaleSwitchR() {
+		switch (autonStep) {
+		case 1:
+
+		}
+	}
+
+	private void switchScaleR() {
+		switch (autonStep) {
+		case 1:
+			driveRobot(Direction.FORWARD, 55, 60);
+			autonStep++;
+			break;
+		case 2:
+			turnRobot(Direction.LEFT, 90, 60);
+			autonStep++;
+			break;
+		case 3:
+			driveRobot(Direction.FORWARD, 10, 60);
+			autonStep++;
+			break;
+		case 4:
+			waitRobot(2);
+			autonStep++;
+			break;
+		case 5:
+			driveRobot(Direction.REVERSE, 10, 60);
+			autonStep++;
+			break;
+		case 6:
+			turnRobot(Direction.RIGHT, 90, 60);
+			autonStep++;
+			break;
+		case 7:
+			driveRobot(Direction.FORWARD, 13, 60);
+			autonStep++;
+			break;
+		case 8:
+			turnRobot(Direction.LEFT, 90, 60);
+			autonStep++;
+			break;
+		case 9:
+			driveRobot(Direction.FORWARD, 13, 60);
+			autonStep++;
+			break;
+		case 10:
 			waitRobot(2);
 			autonStep++;
 			break;
 		case 11:
-			//Moves away getting ready to head for Scale
 			driveRobot(Direction.REVERSE, 13, 60);
 			autonStep++;
 			break;
 		case 12:
-			//Turns toward Scale
 			turnRobot(Direction.RIGHT, 90, 60);
 			autonStep++;
 			break;
 		case 13:
-			//Moves toward Scale
 			driveRobot(Direction.FORWARD, 40, 60);
 			autonStep++;
 			break;
 		case 14:
-			//Turns toward Scale
 			turnRobot(Direction.LEFT, 90, 60);
 			autonStep++;
 			break;
 		case 15:
-			//Drives toward Scale, Closes distance between to drop Cube
 			driveRobot(Direction.FORWARD, 10, 60);
 			autonStep++;
 			break;
 		case 16:
-			//Pause to deliver Cube
 			waitRobot(2);
 			autonStep++;
 			break;
@@ -425,6 +603,19 @@ public class Robot extends IterativeRobot {
 		case 3:
 			driveRobot(Direction.FORWARD, 10, 20);
 			autonStep++;
+			break;
+		}
+	}
+
+	private void cubeAction(Action cubeAction, double distance, double powerPercent) {
+		switch (cubeAction) {
+		case UP:
+			break;
+		case DOWN:
+			break;
+		case OUTTAKE:
+			break;
+		case INTAKE:
 			break;
 		}
 	}
