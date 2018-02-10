@@ -15,7 +15,7 @@ import edu.wpi.first.wpilibj.command.Command;
 //import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 //import com.ctre.CANTalon.TalonControlMode;
-import com.ctre.CANTalon;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import com.analog.adis16448.frc.ADIS16448_IMU;
 
@@ -54,11 +54,11 @@ public class Robot extends IterativeRobot {
 	// Search US Digital Encoder FRC Java E4P Encoder
 
 	Timer autoTime = new Timer();
-	CANTalon _frontLeftMotor = new CANTalon(13);
-	CANTalon _frontRightMotor = new CANTalon(12);
-	CANTalon _rearRightMotor = new CANTalon(11);
-	CANTalon _rearLeftMotor = new CANTalon(10);
-	CANTalon _climber = new CANTalon(14);
+	WPI_TalonSRX _frontLeftMotor = new WPI_TalonSRX(13);
+	WPI_TalonSRX _frontRightMotor = new WPI_TalonSRX(12);
+	WPI_TalonSRX _rearRightMotor = new WPI_TalonSRX(11);
+	WPI_TalonSRX _rearLeftMotor = new WPI_TalonSRX(10);
+	WPI_TalonSRX _climber = new WPI_TalonSRX(14);
 	RobotDrive _drive = new RobotDrive(_frontLeftMotor, _rearLeftMotor, _frontRightMotor, _rearRightMotor);
 	Joystick _joy = new Joystick(0);
 	Joystick _climberJoy = new Joystick(1);
