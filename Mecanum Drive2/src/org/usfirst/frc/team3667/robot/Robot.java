@@ -1,6 +1,7 @@
 package org.usfirst.frc.team3667.robot;
 
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
@@ -15,7 +16,6 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 //import edu.wpi.first.wpilibj.command.Scheduler;
-//import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 //import com.ctre.CANTalon.TalonControlMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
@@ -31,8 +31,13 @@ import com.analog.adis16448.frc.ADIS16448_IMU;
  */
 public class Robot extends IterativeRobot {
 	ADIS16448_IMU imu;
-	SendableChooser startingPositionSwitch;
-	
+	SendableChooser startingPositionRadio;
+	SendableChooser firstTargetRadio;
+	SendableChooser cubePickupRadio;
+	SendableChooser secondTargetRadio;
+
+	String gameData;
+
 	// Command autonomousCommand;
 	public static final double kDistancePerRevolution = 18.84; // guestimate
 	Command autonomousCommand;
@@ -45,7 +50,30 @@ public class Robot extends IterativeRobot {
 	};
 
 	public enum AutonPlays {
-		LEFTSWITCH, RIGHTSWITCH, LEFTSCALE, RIGHTSCALE, CENTERSWITCHR, CENTERSWITCHL, SWITCHSCALER, SWITCHSCALEL, SCALESWITCHR, SCALESWITCHL, SCALESCALEL, SWITCHSWITCHL, SWITCHSWITCHR, SCALESCALER
+		// Start Left Scale Left
+		startLeft_ScaleLeft_ScaleLeft, startLeft_ScaleLeft_SwitchLeft, startLeft_ScaleLeft_SwitchRight,
+		// Start Left Scale Right
+		startLeft_ScaleRight_ScaleRight, startLeft_ScaleRight_SwitchLeft, startLeft_ScaleRight_SwitchRight,
+		// Start Left Switch Left
+		startLeft_SwitchLeft_SwitchLeft, startLeft_SwitchLeft_ScaleRight, startLeft_SwitchLeft_ScaleLeft,
+		// Start Left Switch Right
+		startLeft_SwitchRight_ScaleLeft, startLeft_SwitchRight_ScaleRight, startLeft_SwitchRight_SwitchRight,
+		// Start Center Scale Left
+		startCenter_ScaleLeft_ScaleLeft, startCenter_ScaleLeft_SwitchLeft, startCenter_ScaleLeft_SwitchRight,
+		// Start Center Scale Right
+		startCenter_ScaleRight_ScaleRight, startCenter_ScaleRight_SwitchLeft, startCenter_ScaleRight_SwitchRight,
+		// Start Center Switch Left
+		startCenter_SwitchLeft_SwitchLeft, startCenter_SwitchLeft_ScaleRight, startCenter_SwitchLeft_ScaleLeft,
+		// Start Center Switch Right
+		startCenter_SwitchRight_ScaleLeft, startCenter_SwitchRight_ScaleRight, startCenter_SwitchRight_SwitchRight,
+		// Start Right Scale Left
+		startRight_ScaleLeft_ScaleLeft, startRight_ScaleLeft_SwitchLeft, startRight_ScaleLeft_SwitchRight,
+		// Start Right Scale Right
+		startRight_ScaleRight_ScaleRight, startRight_ScaleRight_SwitchLeft, startRight_ScaleRight_SwitchRight,
+		// Start Right Switch Left
+		startRight_SwitchLeft_SwitchLeft, startRight_SwitchLeft_ScaleRight, startRight_SwitchLeft_ScaleLeft,
+		// Start Right Switch Right
+		startRight_SwitchRight_ScaleLeft, startRight_SwitchRight_ScaleRight, startRight_SwitchRight_SwitchRight,
 	};
 
 	public enum Action {
@@ -76,6 +104,18 @@ public class Robot extends IterativeRobot {
 
 	double lastValidDirection = 0;
 
+	public enum startingPosition {
+		Left, Center, Right
+	}
+
+	public enum target {
+		Switch, Scale, Vault
+	}
+
+	public enum cubePickup {
+		One, Two, Three, Four, Five, Six
+	}
+
 	/**
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
@@ -97,14 +137,36 @@ public class Robot extends IterativeRobot {
 		rightEncoder.reset();
 		speedTestEncoder.reset();
 		// Setup the menu for position selection.
-		 startingPositionSwitch = new SendableChooser();
-		 startingPositionSwitch.addDefault("CENTER", 0);
-		 startingPositionSwitch.addObject("RIGHT", 1);
-		 startingPositionSwitch.addObject("LEFT", 2);
-		 startingPositionSwitch.addObject("OTHER?", 3);
-		 SmartDashboard.putData("STARTING POSITION", startingPositionSwitch);
+		startingPositionRadio = new SendableChooser();
+		startingPositionRadio.addObject("LEFT", startingPosition.Left);
+		startingPositionRadio.addDefault("CENTER", startingPosition.Center);
+		startingPositionRadio.addObject("RIGHT", startingPosition.Right);
+		SmartDashboard.putData("STARTING POSITION", startingPositionRadio);
+		// First Target Selector.
+		firstTargetRadio = new SendableChooser();
+		firstTargetRadio.addDefault("SCALE", target.Scale);
+		firstTargetRadio.addObject("SWITCH", target.Switch);
+		firstTargetRadio.addObject("VAULT", target.Vault);
+		SmartDashboard.putData("FIRST TARGET", firstTargetRadio);
+		// Cube Pickup Selector.
+		cubePickupRadio = new SendableChooser();
+		cubePickupRadio.addDefault("One", cubePickup.One);
+		cubePickupRadio.addObject("Two", cubePickup.Two);
+		cubePickupRadio.addObject("Three", cubePickup.Three);
+		cubePickupRadio.addObject("Four", cubePickup.Four);
+		cubePickupRadio.addObject("Five", cubePickup.Five);
+		cubePickupRadio.addObject("Six", cubePickup.Six);
+		SmartDashboard.putData("CUBE PICKUP", cubePickupRadio);
+		// Second Target Selector.
+		secondTargetRadio = new SendableChooser();
+		secondTargetRadio.addDefault("SCALE", target.Scale);
+		secondTargetRadio.addObject("SWITCH", target.Switch);
+		secondTargetRadio.addObject("VAULT", target.Vault);
+		SmartDashboard.putData("SECOND TARGET", firstTargetRadio);
+		// Get FMS Data to determine ownership sides.
+		gameData = DriverStation.getInstance().getGameSpecificMessage();
 	}
-	
+
 	/**
 	 * This function is called periodically during operator control
 	 */
@@ -125,8 +187,8 @@ public class Robot extends IterativeRobot {
 		if (_joy.getRawButton(3)) {
 			initAndResetAll(); // When the blue "X" button is pressed
 		}
-		Object startPos = startingPositionSwitch.getSelected();
-		
+		Object startPos = startingPositionRadio.getSelected();
+
 	}
 
 	// No code to be added in autonomousInit
@@ -159,50 +221,99 @@ public class Robot extends IterativeRobot {
 	}
 
 	private void executeAutonomousCommandCompendium() {
+		startingPosition startPosition = (startingPosition) startingPositionRadio.getSelected();
+		target firstTarget = (target) firstTargetRadio.getSelected();
+		cubePickup cubePickup = (cubePickup) cubePickupRadio.getSelected();
+		target secondTarget = (target) secondTargetRadio.getSelected();
+		char switchPosition = gameData.charAt(0);
+		char scalePosition = gameData.charAt(1);
+		AutonPlays curPlay = AutonPlays.startCenter_ScaleLeft_ScaleLeft;
+		if (startPosition == startingPosition.Left) {
+			if (firstTarget == target.Scale) {
+				if (scalePosition == 'L') {
+					switch (secondTarget) {
+					case Scale:
+						curPlay = AutonPlays.startLeft_ScaleLeft_ScaleLeft;
+						break;
+					case Switch:
+						if (switchPosition == 'L') {
+							curPlay = AutonPlays.startLeft_ScaleLeft_SwitchLeft;
+						} else {
+							curPlay = AutonPlays.startLeft_ScaleLeft_SwitchRight;
+						}
+						break;
+					case Vault:
+						curPlay = AutonPlays.startLeft_ScaleLeft_Vault;
+						break;
+					}
+				} else {
+
+				}
+			} else if (firstTarget == target.Switch) {
+
+			} else if (firstTarget == target.Vault) {
+
+			}
+		} else if (startPosition == startingPosition.Center) {
+
+		} else if (startPosition == startingPosition.Right) {
+
+		}
+		// curPlay = AutonPlays.startLeft_ScaleLeft_ScaleLeft;
 		// This is the 3667 play book for Autonomous options
-		AutonPlays curPlay = AutonPlays.SWITCHSCALER;
 		switch (curPlay) {
-		case LEFTSCALE:
-			leftScale();
+		case startCenter_ScaleLeft_ScaleLeft:
 			break;
-		case LEFTSWITCH:
-			leftSwitch();
+		case startCenter_ScaleRight_ScaleRight:
 			break;
-		case RIGHTSCALE:
-			rightScale();
+		case startCenter_ScaleRight_SwitchLeft:
 			break;
-		case RIGHTSWITCH:
-			rightSwitch();
+		case startCenter_ScaleRight_SwitchRight:
 			break;
-		case CENTERSWITCHR:
-			centerSwitchR();
+		case startCenter_SwitchLeft_SwitchLeft:
 			break;
-		case CENTERSWITCHL:
-			centerSwitchL();
+		case startCenter_SwitchRight_ScaleLeft:
 			break;
-		case SWITCHSCALER:
-			switchScaleR();
+		case startCenter_SwitchRight_ScaleRight:
 			break;
-		case SCALESWITCHR:
-			scaleSwitchR();
+		case startCenter_SwitchRight_SwitchRight:
 			break;
-		case SCALESWITCHL:
-			scaleSwitchL();
+		case startLeft_ScaleLeft_ScaleLeft:
+			driveRobot(Direction.FORWARD, 55, 60);
 			break;
-		case SCALESCALEL:
-			scaleScaleL();
+		case startLeft_ScaleRight_ScaleRight:
 			break;
-		case SCALESCALER:
-			scaleScaleR();
+		case startLeft_ScaleRight_SwitchLeft:
 			break;
-		case SWITCHSWITCHL:
-			switchSwitchL();
+		case startLeft_ScaleRight_SwitchRight:
 			break;
-		case SWITCHSWITCHR:
-			switchSwitchR();
+		case startLeft_SwitchLeft_SwitchLeft:
+			break;
+		case startLeft_SwitchRight_ScaleLeft:
+			break;
+		case startLeft_SwitchRight_ScaleRight:
+			break;
+		case startLeft_SwitchRight_SwitchRight:
+			break;
+		case startRight_ScaleLeft_ScaleLeft:
+			break;
+		case startRight_ScaleRight_ScaleRight:
+			break;
+		case startRight_ScaleRight_SwitchLeft:
+			break;
+		case startRight_ScaleRight_SwitchRight:
+			break;
+		case startRight_SwitchLeft_SwitchLeft:
+			break;
+		case startRight_SwitchRight_ScaleLeft:
+			break;
+		case startRight_SwitchRight_ScaleRight:
+			break;
+		case startRight_SwitchRight_SwitchRight:
 			break;
 		default:
 			break;
+
 		}
 	}
 
@@ -812,6 +923,7 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("Test Encoder Rate Value", speedTestEncoder.getRate());
 		SmartDashboard.putNumber("Test Encoder Count", speedTestEncoder.get());
 		SmartDashboard.putNumber("Test Encoder Raw", speedTestEncoder.getRaw());
+		SmartDashboard.putString("FMS Data", gameData);
 	}
 
 	private void waitRobot(double waitTime) {
