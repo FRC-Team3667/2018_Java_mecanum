@@ -48,7 +48,9 @@ public class Robot extends IterativeRobot {
 	Command autonomousCommand;
 	// SendableChooser autoChooser;
 	// for an AS5145B Magnetic Encoder
-	public static final double kPulsesPerRevolution = 250;
+	//public static final double kPulsesPerRevolution = 390;
+	// US Digital E4T Optical Encoder
+	public static final double kPulsesPerRevolution = 256;
 
 	public enum Direction {
 		FORWARD, REVERSE, LEFT, RIGHT
@@ -115,7 +117,8 @@ public class Robot extends IterativeRobot {
 	double desiredCubeHeight = 0;
 
 	int autonStep = 1;
-
+	String curPlayOutput = "ARBITARY VALUE";
+	
 	double lastValidDirection = 0;
 
 	public enum startingPosition {
@@ -176,7 +179,7 @@ public class Robot extends IterativeRobot {
 		secondTargetRadio.addDefault("SCALE", target.Scale);
 		secondTargetRadio.addObject("SWITCH", target.Switch);
 		secondTargetRadio.addObject("VAULT", target.Vault);
-		SmartDashboard.putData("SECOND TARGET", firstTargetRadio);
+		SmartDashboard.putData("SECOND TARGET", secondTargetRadio);
 		// Get FMS Data to determine ownership sides.
 		gameData = DriverStation.getInstance().getGameSpecificMessage();
 	}
@@ -242,6 +245,7 @@ public class Robot extends IterativeRobot {
 		char switchPosition = gameData.charAt(0);
 		char scalePosition = gameData.charAt(1);
 		AutonPlays curPlay = determinePlay(startPosition, firstTarget, secondTarget, switchPosition, scalePosition);
+		curPlayOutput = curPlay.toString();
 		// This is the 3667 play book for Autonomous options
 		switch (curPlay) {
 		case startCenter_ScaleLeft_ScaleLeft:
@@ -439,9 +443,51 @@ public class Robot extends IterativeRobot {
 	}
 
 	private void startCenterScaleLeftScaleLeft() {
+		// TODO Auto-generated method stub
 		switch (autonStep) {
 		case 1:
 			robotAction(Direction.FORWARD, 55, 60, 0, 0);
+			autonStep++;
+			break;
+		case 2:
+			robotAction(Direction.LEFT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 3:
+			robotAction(Direction.FORWARD, 105, 60, 0, 0);
+			autonStep++;
+			break;
+		case 4:
+			robotAction(Direction.RIGHT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 5:
+			robotAction(Direction.FORWARD, 261, 70, 0, 0);
+			autonStep++;
+			break;
+		case 6:
+			robotAction(Direction.RIGHT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 7:
+			robotAction(Direction.FORWARD, 10, 60, 0, 0);
+			autonStep++;
+			break;
+		case 8:
+			//Needs to do with cube grabber
+			robotAction(Direction.FORWARD, 0, 60, 0, 0);
+			autonStep++;
+			break;
+		case 9:
+			robotAction(Direction.REVERSE, 10, 60, 0, 0);
+			autonStep++;
+			break;
+		case 10:
+			robotAction(Direction.RIGHT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 11:
+			robotAction(Direction.FORWARD, 100, 60, 0, 0);
 			autonStep++;
 			break;
 		}
@@ -465,6 +511,32 @@ public class Robot extends IterativeRobot {
 
 	private void startCenterScaleRightScaleRight() {
 		// TODO Auto-generated method stub
+		switch (autonStep) {
+		case 1:
+			robotAction(Direction.FORWARD, 55, 60, 0, 0);
+			autonStep++;
+			break;
+		case 2:
+			robotAction(Direction.LEFT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 3:
+			robotAction(Direction.FORWARD, 100, 60, 0, 0);
+			autonStep++;
+			break;
+		case 4:
+			robotAction(Direction.RIGHT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 5:
+			robotAction(Direction.FORWARD, 30, 60, 0, 0);
+			autonStep++;
+			break;
+		case 6:
+			robotAction(Direction.RIGHT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		}
 
 	}
 
@@ -550,7 +622,20 @@ public class Robot extends IterativeRobot {
 
 	private void startLeftScaleLeftScaleLeft() {
 		// TODO Auto-generated method stub
-
+		switch (autonStep) {
+		case 1:
+			robotAction(Direction.FORWARD, 296, 80, 0, 0);
+			autonStep++;
+			break;
+		case 2:
+			robotAction(Direction.RIGHT, 90, 70, 0, 0);
+			autonStep++;
+			break;
+		case 3:
+			robotAction(Direction.FORWARD, 24, 50, 0, 0);
+			autonStep++;
+			break;
+		}
 	}
 
 	private void startLeftScaleLeftSwitchLeft() {
@@ -602,15 +687,15 @@ public class Robot extends IterativeRobot {
 		// TODO Auto-generated method stub
 		switch (autonStep) {
 		case 1:
-			robotAction(Direction.FORWARD, 168, 50, 0, 0);
+			robotAction(Direction.FORWARD, 150, 80, 0, 0);
 			autonStep++;
 			break;
 		case 2:
-			robotAction(Direction.RIGHT, 90, 50, 0, 0);
+			robotAction(Direction.RIGHT, 90, 70, 0, 0);
 			autonStep++;
 			break;
 		case 3:
-			robotAction(Direction.FORWARD, 24, 50, 0, 0);
+			robotAction(Direction.FORWARD, 12, 50, 0, 0);
 			autonStep++;
 			break;
 		}
@@ -787,9 +872,19 @@ public class Robot extends IterativeRobot {
 					/*&& currentCubeHeight != desiredCubeHeight*/ ) {
 				if (leftEncoder.getDistance() <= startingLeftEncoder + distance
 						&& rightEncoder.getDistance() <= startingRightEncoder + distance) {
+					// Go selected speed 'til ten inches of target, then we slow down
+					// TODO robot not slowing down ;(
+					/*if ( Math.abs(leftEncoder.getDistance() - startingLeftEncoder + distance) > 100 )
+					{
+						_drive.arcadeDrive(powerPercent * .01, 0);
+					}
+					else
+					{
+						_drive.arcadeDrive(.25, 0);
+					}*/
 					_drive.arcadeDrive(powerPercent * .01, 0);
-				} else if (leftEncoder.getDistance() <= startingLeftEncoder + distance
-						&& rightEncoder.getDistance() <= startingRightEncoder + distance) {
+				} else if (leftEncoder.getDistance() >= startingLeftEncoder + distance
+						&& rightEncoder.getDistance() >= startingRightEncoder + distance) {
 					_drive.arcadeDrive(powerPercent * -.01, 0);
 				}
 				// obtain the height encoder value here to determine if the
@@ -951,6 +1046,7 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("Test Encoder Count", liftEncoder.get());
 		SmartDashboard.putNumber("Test Encoder Raw", liftEncoder.getRaw());
 		SmartDashboard.putString("FMS Data", gameData);
+		SmartDashboard.putString("Current Play:", curPlayOutput);
 	}
 
 	private void waitRobot(double waitTime) {
