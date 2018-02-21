@@ -41,14 +41,14 @@ public class Robot extends IterativeRobot {
 	SendableChooser<cubePickup> cubePickupRadio;
 	SendableChooser<target> secondTargetRadio;
 
-	String gameData;
+	String gameData = "";
 
 	// Command autonomousCommand;
 	public static final double kDistancePerRevolution = 18.84; // guestimate
 	Command autonomousCommand;
 	// SendableChooser autoChooser;
 	// for an AS5145B Magnetic Encoder
-	//public static final double kPulsesPerRevolution = 390;
+	// public static final double kPulsesPerRevolution = 390;
 	// US Digital E4T Optical Encoder
 	public static final double kPulsesPerRevolution = 256;
 
@@ -57,6 +57,7 @@ public class Robot extends IterativeRobot {
 	};
 
 	public enum AutonPlays {
+		driveForwardOnly,
 		// Start Left Scale Left
 		startLeft_ScaleLeft_ScaleLeft, startLeft_ScaleLeft_SwitchLeft, startLeft_ScaleLeft_SwitchRight, startLeft_ScaleLeft_Vault,
 		// Start Left Scale Right
@@ -94,12 +95,15 @@ public class Robot extends IterativeRobot {
 	};
 
 	public static final double kDistancePerPulse = kDistancePerRevolution / kPulsesPerRevolution;
-	// Actual Encoder Values
-	//private Encoder leftEncoder = new Encoder(0, 1, true, EncodingType.k4X);
-	private Encoder rightEncoder = new Encoder(2, 3, false, EncodingType.k4X);
+	// Encoder Values for 18.
+	private Encoder leftEncoder = new Encoder(0, 1, false, EncodingType.k4X);
+	private Encoder rightEncoder = new Encoder(2, 3, true, EncodingType.k4X);
 	private Encoder liftEncoder = new Encoder(4, 5, false, EncodingType.k4X);
-	// Right encoder not working properly so mirroring left  
-	private Encoder leftEncoder = rightEncoder;
+	// Encoder Values for 17.
+	// private Encoder leftEncoder = new Encoder(0, 1, true, EncodingType.k4X);
+	// private Encoder rightEncoder = new Encoder(2, 3, false,
+	// EncodingType.k4X);
+	// private Encoder liftEncoder = new Encoder(4, 5, false, EncodingType.k4X);
 	// Search US Digital Encoder FRC Java E4P Encoder
 
 	Timer autoTime = new Timer();
@@ -117,8 +121,8 @@ public class Robot extends IterativeRobot {
 	double desiredCubeHeight = 0;
 
 	int autonStep = 1;
-	String curPlayOutput = "ARBITARY VALUE";
-	
+	AutonPlays curPlay = AutonPlays.driveForwardOnly;
+
 	double lastValidDirection = 0;
 
 	public enum startingPosition {
@@ -180,8 +184,6 @@ public class Robot extends IterativeRobot {
 		secondTargetRadio.addObject("SWITCH", target.Switch);
 		secondTargetRadio.addObject("VAULT", target.Vault);
 		SmartDashboard.putData("SECOND TARGET", secondTargetRadio);
-		// Get FMS Data to determine ownership sides.
-		gameData = DriverStation.getInstance().getGameSpecificMessage();
 	}
 
 	/**
@@ -224,6 +226,22 @@ public class Robot extends IterativeRobot {
 		liftEncoder.reset();
 		autonStep = 1;
 		lastValidDirection = 0;
+		// Get FMS Data to determine ownership sides.
+		int retries = 50;
+		while (gameData.length() != 3 && retries > 0) {
+			SmartDashboard.putString("Current Play:", gameData);
+			try {
+				Thread.sleep(5);
+				gameData = DriverStation.getInstance().getGameSpecificMessage();
+				if (gameData == null) {
+					gameData = "";
+				}
+			} catch (Exception e) {
+			}
+			retries--;
+		}
+		curPlay = determinePlay();
+		updateSmartDashboardData();
 	}
 
 	public void autonomousPeriodic() {
@@ -238,16 +256,16 @@ public class Robot extends IterativeRobot {
 	}
 
 	private void executeAutonomousCommandCompendium() {
-		startingPosition startPosition = (startingPosition) startingPositionRadio.getSelected();
-		target firstTarget = (target) firstTargetRadio.getSelected();
-		cubePickup cubePickup = (cubePickup) cubePickupRadio.getSelected();
-		target secondTarget = (target) secondTargetRadio.getSelected();
-		char switchPosition = gameData.charAt(0);
-		char scalePosition = gameData.charAt(1);
-		AutonPlays curPlay = determinePlay(startPosition, firstTarget, secondTarget, switchPosition, scalePosition);
-		curPlayOutput = curPlay.toString();
+		if (curPlay == AutonPlays.driveForwardOnly) {
+			curPlay = determinePlay(); // This should be done during init, but
+										// check again if we are just driving
+										// forward
+		}
 		// This is the 3667 play book for Autonomous options
 		switch (curPlay) {
+		case driveForwardOnly:
+			driveForwardOnly();
+			break;
 		case startCenter_ScaleLeft_ScaleLeft:
 			startCenterScaleLeftScaleLeft();
 			break;
@@ -442,8 +460,17 @@ public class Robot extends IterativeRobot {
 		}
 	}
 
+	private void driveForwardOnly() {
+		switch (autonStep) {
+		case 1:
+			robotAction(Direction.FORWARD, 150, 60, 0, 0);
+			autonStep++;
+			break;
+		}
+	}
+
 	private void startCenterScaleLeftScaleLeft() {
-		// TODO Auto-generated method stub
+		// Not done
 		switch (autonStep) {
 		case 1:
 			robotAction(Direction.FORWARD, 55, 60, 0, 0);
@@ -474,7 +501,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 8:
-			//Needs to do with cube grabber
+			// Needs to do with cube grabber
 			robotAction(Direction.FORWARD, 0, 60, 0, 0);
 			autonStep++;
 			break;
@@ -491,7 +518,6 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		}
-
 	}
 
 	private void startCenterScaleLeftSwitchLeft() {
@@ -510,7 +536,6 @@ public class Robot extends IterativeRobot {
 	}
 
 	private void startCenterScaleRightScaleRight() {
-		// TODO Auto-generated method stub
 		switch (autonStep) {
 		case 1:
 			robotAction(Direction.FORWARD, 55, 60, 0, 0);
@@ -521,7 +546,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 3:
-			robotAction(Direction.FORWARD, 100, 60, 0, 0);
+			robotAction(Direction.FORWARD, 105, 60, 0, 0);
 			autonStep++;
 			break;
 		case 4:
@@ -529,15 +554,37 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 5:
-			robotAction(Direction.FORWARD, 30, 60, 0, 0);
+			robotAction(Direction.FORWARD, 261, 70, 0, 0);
 			autonStep++;
 			break;
 		case 6:
 			robotAction(Direction.RIGHT, 90, 60, 0, 0);
 			autonStep++;
 			break;
+		case 7:
+			robotAction(Direction.FORWARD, 10, 60, 0, 0);
+			autonStep++;
+			break;
+		case 8:
+			// Needs to do with cube grabber
+			robotAction(Direction.FORWARD, 0, 60, 0, 0);
+			autonStep++;
+			break;
+		case 9:
+			robotAction(Direction.REVERSE, 10, 60, 0, 0);
+			autonStep++;
+			break;
+		case 10:
+			robotAction(Direction.RIGHT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 11:
+			robotAction(Direction.FORWARD, 100, 60, 0, 0);
+			autonStep++;
+			break;
+		case 12:
+			robotAction(Direction., 0, 60, 0, 0);
 		}
-
 	}
 
 	private void startCenterScaleRightSwitchLeft() {
@@ -621,7 +668,6 @@ public class Robot extends IterativeRobot {
 	}
 
 	private void startLeftScaleLeftScaleLeft() {
-		// TODO Auto-generated method stub
 		switch (autonStep) {
 		case 1:
 			robotAction(Direction.FORWARD, 296, 80, 0, 0);
@@ -633,6 +679,11 @@ public class Robot extends IterativeRobot {
 			break;
 		case 3:
 			robotAction(Direction.FORWARD, 24, 50, 0, 0);
+			autonStep++;
+			break;
+		case 4:
+			// Something with Cube Thingy
+			robotAction(Direction.REVERSE, 24, 50, 0, 0);
 			autonStep++;
 			break;
 		}
@@ -674,8 +725,60 @@ public class Robot extends IterativeRobot {
 	}
 
 	private void startLeftSwitchLeftScaleLeft() {
-		// TODO Auto-generated method stub
-
+		switch (autonStep) {
+		case 1:
+			robotAction(Direction.FORWARD, 140, 60, 0, 0);
+			autonStep++;
+			break;
+		case 2:
+			robotAction(Direction.RIGHT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 3:
+			robotAction(Direction.FORWARD, 10, 60, 0, 0);
+			autonStep++;
+			break;
+		case 4:
+			robotAction(Direction.REVERSE, 10, 60, 0, 0);
+			autonStep++;
+			break;
+		case 5:
+			robotAction(Direction.LEFT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 6:
+			robotAction(Direction.FORWARD, 13, 60, 0, 0);
+			autonStep++;
+			break;
+		case 7:
+			robotAction(Direction.RIGHT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 8:
+			robotAction(Direction.FORWARD, 13, 60, 0, 0);
+			autonStep++;
+			break;
+		case 9:
+			robotAction(Direction.REVERSE, 13, 60, 0, 0);
+			autonStep++;
+			break;
+		case 10:
+			robotAction(Direction.LEFT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 11:
+			robotAction(Direction.FORWARD, 40, 60, 0, 0);
+			autonStep++;
+			break;
+		case 12:
+			robotAction(Direction.RIGHT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 13:
+			robotAction(Direction.FORWARD, 10, 60, 0, 0);
+			autonStep++;
+			break;
+		}
 	}
 
 	private void startLeftSwitchLeftScaleRight() {
@@ -684,22 +787,71 @@ public class Robot extends IterativeRobot {
 	}
 
 	private void startLeftSwitchLeftSwitchLeft() {
-		// TODO Auto-generated method stub
 		switch (autonStep) {
 		case 1:
-			robotAction(Direction.FORWARD, 150, 80, 0, 0);
+			desiredCubeHeight = 0;
+			robotAction(Direction.FORWARD, 55, 60, 0, 0);
 			autonStep++;
 			break;
 		case 2:
-			robotAction(Direction.RIGHT, 90, 70, 0, 0);
+			desiredCubeHeight = 10;
+			robotAction(Direction.RIGHT, 90, 60, 0, 0);
 			autonStep++;
 			break;
 		case 3:
-			robotAction(Direction.FORWARD, 12, 50, 0, 0);
+			desiredCubeHeight = 20;
+			robotAction(Direction.FORWARD, 10, 60, 0, 0);
+			autonStep++;
+			break;
+		case 4:
+			robotAction(Direction.REVERSE, 10, 60, 0, 0);
+			autonStep++;
+			break;
+		case 5:
+			robotAction(Direction.LEFT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 6:
+			robotAction(Direction.FORWARD, 13, 60, 0, 0);
+			autonStep++;
+			break;
+		case 7:
+			robotAction(Direction.LEFT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 8:
+			robotAction(Direction.FORWARD, 13, 60, 0, 0);
+			autonStep++;
+			break;
+		case 9:
+			robotAction(Direction.LEFT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 10:
+			robotAction(Direction.FORWARD, 10, 60, 0, 0);
+			autonStep++;
+			break;
+		case 11:
+			robotAction(Direction.REVERSE, 10, 60, 0, 0);
+			autonStep++;
+			break;
+		case 12:
+			robotAction(Direction.LEFT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 13:
+			robotAction(Direction.FORWARD, 13, 60, 0, 0);
+			autonStep++;
+			break;
+		case 14:
+			robotAction(Direction.RIGHT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 15:
+			robotAction(Direction.FORWARD, 10, 60, 0, 0);
 			autonStep++;
 			break;
 		}
-
 	}
 
 	private void startLeftSwitchLeftVault() {
@@ -818,13 +970,126 @@ public class Robot extends IterativeRobot {
 	}
 
 	private void startRightSwitchRightScaleRight() {
-		// TODO Auto-generated method stub
+		switch (autonStep) {
+		case 1:
+			robotAction(Direction.FORWARD, 55, 100, 0, 0);
+			autonStep++;
+			break;
+		case 2:
+			robotAction(Direction.LEFT, 90, 100, 0, 0);
+			autonStep++;
+			break;
+		case 3:
+			robotAction(Direction.FORWARD, 10, 100, 0, 0);
+			autonStep++;
+			break;
+		case 5:
+			robotAction(Direction.REVERSE, 10, 100, 0, 0);
+			autonStep++;
+			break;
+		case 6:
+			robotAction(Direction.RIGHT, 90, 100, 0, 0);
+			autonStep++;
+			break;
+		case 7:
+			robotAction(Direction.FORWARD, 13, 100, 0, 0);
+			autonStep++;
+			break;
+		case 8:
+			robotAction(Direction.LEFT, 90, 100, 0, 0);
+			autonStep++;
+			break;
+		case 9:
+			robotAction(Direction.FORWARD, 13, 60, 0, 0);
+			autonStep++;
+			break;
+		case 11:
+			robotAction(Direction.REVERSE, 13, 60, 0, 0);
+			autonStep++;
+			break;
+		case 12:
+			robotAction(Direction.RIGHT, 90, 100, 0, 0);
+			autonStep++;
+			break;
+		case 13:
+			robotAction(Direction.FORWARD, 40, 60, 0, 0);
+			autonStep++;
+			break;
+		case 14:
+			robotAction(Direction.LEFT, 90, 100, 0, 0);
+			autonStep++;
+			break;
+		case 15:
+			robotAction(Direction.FORWARD, 10, 60, 0, 0);
+			autonStep++;
+			break;
+		}
 
 	}
 
 	private void startRightSwitchRightSwitchRight() {
-		// TODO Auto-generated method stub
-
+		switch (autonStep) {
+		case 1:
+			robotAction(Direction.FORWARD, 55, 60, 0, 0);
+			autonStep++;
+			break;
+		case 2:
+			robotAction(Direction.LEFT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 3:
+			robotAction(Direction.FORWARD, 10, 60, 0, 0);
+			autonStep++;
+			break;
+		case 4:
+			robotAction(Direction.REVERSE, 10, 60, 0, 0);
+			autonStep++;
+			break;
+		case 5:
+			robotAction(Direction.RIGHT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 6:
+			robotAction(Direction.FORWARD, 13, 60, 0, 0);
+			autonStep++;
+			break;
+		case 7:
+			robotAction(Direction.LEFT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 8:
+			robotAction(Direction.FORWARD, 13, 60, 0, 0);
+			autonStep++;
+			break;
+		case 9:
+			robotAction(Direction.RIGHT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 10:
+			robotAction(Direction.FORWARD, 10, 60, 0, 0);
+			autonStep++;
+			break;
+		case 11:
+			robotAction(Direction.REVERSE, 10, 60, 0, 0);
+			autonStep++;
+			break;
+		case 12:
+			robotAction(Direction.RIGHT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 13:
+			robotAction(Direction.FORWARD, 13, 60, 0, 0);
+			autonStep++;
+			break;
+		case 14:
+			robotAction(Direction.LEFT, 90, 60, 0, 0);
+			autonStep++;
+			break;
+		case 15:
+			robotAction(Direction.FORWARD, 10, 60, 0, 0);
+			autonStep++;
+			break;
+		}
 	}
 
 	private void startRightSwitchRightVault() {
@@ -869,19 +1134,18 @@ public class Robot extends IterativeRobot {
 		case FORWARD:
 			while (leftEncoder.getDistance() <= startingLeftEncoder + distance
 					&& rightEncoder.getDistance() <= startingRightEncoder + distance
-					/*&& currentCubeHeight != desiredCubeHeight*/ ) {
+			/* && currentCubeHeight != desiredCubeHeight */ ) {
 				if (leftEncoder.getDistance() <= startingLeftEncoder + distance
 						&& rightEncoder.getDistance() <= startingRightEncoder + distance) {
-					// Go selected speed 'til ten inches of target, then we slow down
+					// Go selected speed 'til ten inches of target, then we slow
+					// down
 					// TODO robot not slowing down ;(
-					/*if ( Math.abs(leftEncoder.getDistance() - startingLeftEncoder + distance) > 100 )
-					{
-						_drive.arcadeDrive(powerPercent * .01, 0);
-					}
-					else
-					{
-						_drive.arcadeDrive(.25, 0);
-					}*/
+					/*
+					 * if ( Math.abs(leftEncoder.getDistance() -
+					 * startingLeftEncoder + distance) > 100 ) {
+					 * _drive.arcadeDrive(powerPercent * .01, 0); } else {
+					 * _drive.arcadeDrive(.25, 0); }
+					 */
 					_drive.arcadeDrive(powerPercent * .01, 0);
 				} else if (leftEncoder.getDistance() >= startingLeftEncoder + distance
 						&& rightEncoder.getDistance() >= startingRightEncoder + distance) {
@@ -890,13 +1154,13 @@ public class Robot extends IterativeRobot {
 				// obtain the height encoder value here to determine if the
 				// height should change while driving
 				currentCubeHeight = liftEncoder.getDistance();
-//				if (currentCubeHeight != desiredCubeHeight) {
-//					if (currentCubeHeight < desiredCubeHeight) {
-//						_lift.set(.5);
-//					} else {
-//						_lift.set(-.5);
-//					}
-//				}
+				// if (currentCubeHeight != desiredCubeHeight) {
+				// if (currentCubeHeight < desiredCubeHeight) {
+				// _lift.set(.5);
+				// } else {
+				// _lift.set(-.5);
+				// }
+				// }
 			}
 			break;
 		case REVERSE:
@@ -1046,7 +1310,7 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("Test Encoder Count", liftEncoder.get());
 		SmartDashboard.putNumber("Test Encoder Raw", liftEncoder.getRaw());
 		SmartDashboard.putString("FMS Data", gameData);
-		SmartDashboard.putString("Current Play:", curPlayOutput);
+		SmartDashboard.putString("Current Play:", curPlay.toString());
 	}
 
 	private void waitRobot(double waitTime) {
@@ -1057,306 +1321,321 @@ public class Robot extends IterativeRobot {
 		// }
 	}
 
-	private AutonPlays determinePlay(startingPosition startPosition, target firstTarget, target secondTarget,
-			char switchPosition, char scalePosition) {
-		AutonPlays curPlay = AutonPlays.startLeft_ScaleLeft_ScaleLeft;
-		// All Start Left Logic
-		if (startPosition == startingPosition.Left) {
-			if (firstTarget == target.Scale) {
-				if (scalePosition == 'L') {
-					switch (secondTarget) {
-					case Scale:
-						curPlay = AutonPlays.startLeft_ScaleLeft_ScaleLeft;
-						break;
-					case Switch:
-						if (switchPosition == 'L') {
-							curPlay = AutonPlays.startLeft_ScaleLeft_SwitchLeft;
-						} else {
-							curPlay = AutonPlays.startLeft_ScaleLeft_SwitchRight;
-						}
-						break;
-					case Vault:
-						curPlay = AutonPlays.startLeft_ScaleLeft_Vault;
-						break;
-					}
-				}
-				// Start Left Scale Right
-				else {
-					switch (secondTarget) {
-					case Scale:
-						curPlay = AutonPlays.startLeft_ScaleRight_ScaleRight;
-						break;
-					case Switch:
-						if (switchPosition == 'L') {
-							curPlay = AutonPlays.startLeft_ScaleRight_SwitchLeft;
-						} else {
-							curPlay = AutonPlays.startLeft_ScaleRight_SwitchRight;
-						}
-						break;
-					case Vault:
-						curPlay = AutonPlays.startLeft_ScaleRight_Vault;
-						break;
-					}
-				}
-			}
-			// Start Left Switch Left
-			else if (firstTarget == target.Switch) {
-				if (switchPosition == 'L') {
-					switch (secondTarget) {
-					case Scale:
-						if (scalePosition == 'L') {
-							curPlay = AutonPlays.startLeft_SwitchLeft_ScaleLeft;
-						} else {
-							curPlay = AutonPlays.startLeft_SwitchLeft_ScaleRight;
-						}
-						break;
-					case Switch:
-						curPlay = AutonPlays.startLeft_SwitchLeft_SwitchLeft;
-						break;
-					case Vault:
-						curPlay = AutonPlays.startLeft_SwitchLeft_Vault;
-						break;
-					}
-				}
-				// Start Left Switch Right
-				else {
-					switch (secondTarget) {
-					case Scale:
-						if (scalePosition == 'L') {
-							curPlay = AutonPlays.startLeft_SwitchRight_ScaleLeft;
-						} else {
-							curPlay = AutonPlays.startLeft_SwitchRight_ScaleRight;
-						}
-						break;
-					case Switch:
-						curPlay = AutonPlays.startLeft_SwitchRight_SwitchRight;
-						break;
-					case Vault:
-						curPlay = AutonPlays.startLeft_SwitchRight_Vault;
-						break;
-					}
-				}
-			}
-			// Start Left Vault
-			else if (firstTarget == target.Vault) {
-				switch (secondTarget) {
-				case Scale:
-					if (scalePosition == 'L') {
-						curPlay = AutonPlays.startLeft_Vault_ScaleLeft;
-					} else {
-						curPlay = AutonPlays.startLeft_Vault_ScaleRight;
-					}
-					break;
-				case Switch:
-					if (switchPosition == 'L') {
-						curPlay = AutonPlays.startLeft_Vault_SwitchLeft;
-					} else {
-						curPlay = AutonPlays.startLeft_Vault_SwitchRight;
-					}
-					break;
-				case Vault:
-					curPlay = AutonPlays.startLeft_Vault_Vault;
-					break;
-				}
-			}
+	private AutonPlays determinePlay() {
+		startingPosition startPosition = (startingPosition) startingPositionRadio.getSelected();
+		target firstTarget = (target) firstTargetRadio.getSelected();
+		// cubePickup cubePickup = (cubePickup) cubePickupRadio.getSelected();
+		target secondTarget = (target) secondTargetRadio.getSelected();
+		char switchPosition = ' ';
+		char scalePosition = ' ';
+		try {
+			switchPosition = gameData.charAt(0);
+		} catch (Exception e) {
 		}
-		// All Start Center Logic
-		else if (startPosition == startingPosition.Center) {
-			if (firstTarget == target.Scale) {
-				if (scalePosition == 'L') {
-					switch (secondTarget) {
-					case Scale:
-						curPlay = AutonPlays.startCenter_ScaleLeft_ScaleLeft;
-						break;
-					case Switch:
-						if (switchPosition == 'L') {
-							curPlay = AutonPlays.startCenter_ScaleLeft_SwitchLeft;
-						} else {
-							curPlay = AutonPlays.startCenter_ScaleLeft_SwitchRight;
-						}
-						break;
-					case Vault:
-						curPlay = AutonPlays.startCenter_ScaleLeft_Vault;
-						break;
-					}
-				}
-				// Start Center Scale Right
-				else {
-					switch (secondTarget) {
-					case Scale:
-						curPlay = AutonPlays.startCenter_ScaleRight_ScaleRight;
-						break;
-					case Switch:
-						if (switchPosition == 'L') {
-							curPlay = AutonPlays.startCenter_ScaleRight_SwitchLeft;
-						} else {
-							curPlay = AutonPlays.startCenter_ScaleRight_SwitchRight;
-						}
-						break;
-					case Vault:
-						curPlay = AutonPlays.startCenter_ScaleRight_Vault;
-						break;
-					}
-				}
-			}
-			// Start Center Switch Left
-			else if (firstTarget == target.Switch) {
-				if (switchPosition == 'L') {
-					switch (secondTarget) {
-					case Scale:
-						if (scalePosition == 'L') {
-							curPlay = AutonPlays.startCenter_SwitchLeft_ScaleLeft;
-						} else {
-							curPlay = AutonPlays.startCenter_SwitchLeft_ScaleRight;
-						}
-						break;
-					case Switch:
-						curPlay = AutonPlays.startCenter_SwitchLeft_SwitchLeft;
-						break;
-					case Vault:
-						curPlay = AutonPlays.startCenter_SwitchLeft_Vault;
-						break;
-					}
-				}
-				// Start Center Switch Right
-				else {
-					switch (secondTarget) {
-					case Scale:
-						if (scalePosition == 'L') {
-							curPlay = AutonPlays.startCenter_SwitchRight_ScaleLeft;
-						} else {
-							curPlay = AutonPlays.startCenter_SwitchRight_ScaleRight;
-						}
-						break;
-					case Switch:
-						curPlay = AutonPlays.startCenter_SwitchRight_SwitchRight;
-						break;
-					case Vault:
-						curPlay = AutonPlays.startCenter_SwitchRight_Vault;
-						break;
-					}
-				}
-			}
-			// Start Center Vault
-			else if (firstTarget == target.Vault) {
-				switch (secondTarget) {
-				case Scale:
-					if (scalePosition == 'L') {
-						curPlay = AutonPlays.startCenter_Vault_ScaleLeft;
-					} else {
-						curPlay = AutonPlays.startCenter_Vault_ScaleRight;
-					}
-					break;
-				case Switch:
-					if (switchPosition == 'L') {
-						curPlay = AutonPlays.startCenter_Vault_SwitchLeft;
-					} else {
-						curPlay = AutonPlays.startCenter_Vault_SwitchRight;
-					}
-					break;
-				case Vault:
-					curPlay = AutonPlays.startCenter_Vault_Vault;
-					break;
-				}
-			}
+		try {
+			scalePosition = gameData.charAt(1);
+		} catch (Exception e) {
 		}
-		// All Start Right Logic
-		else if (startPosition == startingPosition.Right) {
-			if (firstTarget == target.Scale) {
-				if (scalePosition == 'L') {
-					switch (secondTarget) {
-					case Scale:
-						curPlay = AutonPlays.startRight_ScaleLeft_ScaleLeft;
-						break;
-					case Switch:
-						if (switchPosition == 'L') {
-							curPlay = AutonPlays.startRight_ScaleLeft_SwitchLeft;
-						} else {
-							curPlay = AutonPlays.startRight_ScaleLeft_SwitchRight;
-						}
-						break;
-					case Vault:
-						curPlay = AutonPlays.startRight_ScaleLeft_Vault;
-						break;
-					}
-				}
-				// Start Right Scale Right
-				else {
-					switch (secondTarget) {
-					case Scale:
-						curPlay = AutonPlays.startRight_ScaleRight_ScaleRight;
-						break;
-					case Switch:
-						if (switchPosition == 'L') {
-							curPlay = AutonPlays.startRight_ScaleRight_SwitchLeft;
-						} else {
-							curPlay = AutonPlays.startRight_ScaleRight_SwitchRight;
-						}
-						break;
-					case Vault:
-						curPlay = AutonPlays.startRight_ScaleRight_Vault;
-						break;
-					}
-				}
-			}
-			// Start Right Switch Left
-			else if (firstTarget == target.Switch) {
-				if (switchPosition == 'L') {
-					switch (secondTarget) {
-					case Scale:
-						if (scalePosition == 'L') {
-							curPlay = AutonPlays.startRight_SwitchLeft_ScaleLeft;
-						} else {
-							curPlay = AutonPlays.startRight_SwitchLeft_ScaleRight;
-						}
-						break;
-					case Switch:
-						curPlay = AutonPlays.startRight_SwitchLeft_SwitchLeft;
-						break;
-					case Vault:
-						curPlay = AutonPlays.startRight_SwitchLeft_Vault;
-						break;
-					}
-				}
-				// Start Right Switch Right
-				else {
-					switch (secondTarget) {
-					case Scale:
-						if (scalePosition == 'L') {
-							curPlay = AutonPlays.startRight_SwitchRight_ScaleLeft;
-						} else {
-							curPlay = AutonPlays.startRight_SwitchRight_ScaleRight;
-						}
-						break;
-					case Switch:
-						curPlay = AutonPlays.startRight_SwitchRight_SwitchRight;
-						break;
-					case Vault:
-						curPlay = AutonPlays.startRight_SwitchRight_Vault;
-						break;
-					}
-				}
-			}
-			// Start Right Vault
-			else if (firstTarget == target.Vault) {
-				switch (secondTarget) {
-				case Scale:
+		AutonPlays curPlay = AutonPlays.driveForwardOnly;
+		if (gameData.length() > 0) {
+			// All Start Left Logic
+			if (startPosition == startingPosition.Left) {
+				if (firstTarget == target.Scale) {
 					if (scalePosition == 'L') {
-						curPlay = AutonPlays.startRight_Vault_ScaleLeft;
-					} else {
-						curPlay = AutonPlays.startRight_Vault_ScaleRight;
+						switch (secondTarget) {
+						case Scale:
+							curPlay = AutonPlays.startLeft_ScaleLeft_ScaleLeft;
+							break;
+						case Switch:
+							if (switchPosition == 'L') {
+								curPlay = AutonPlays.startLeft_ScaleLeft_SwitchLeft;
+							} else {
+								curPlay = AutonPlays.startLeft_ScaleLeft_SwitchRight;
+							}
+							break;
+						case Vault:
+							curPlay = AutonPlays.startLeft_ScaleLeft_Vault;
+							break;
+						}
 					}
-					break;
-				case Switch:
+					// Start Left Scale Right
+					else {
+						switch (secondTarget) {
+						case Scale:
+							curPlay = AutonPlays.startLeft_ScaleRight_ScaleRight;
+							break;
+						case Switch:
+							if (switchPosition == 'L') {
+								curPlay = AutonPlays.startLeft_ScaleRight_SwitchLeft;
+							} else {
+								curPlay = AutonPlays.startLeft_ScaleRight_SwitchRight;
+							}
+							break;
+						case Vault:
+							curPlay = AutonPlays.startLeft_ScaleRight_Vault;
+							break;
+						}
+					}
+				}
+				// Start Left Switch Left
+				else if (firstTarget == target.Switch) {
 					if (switchPosition == 'L') {
-						curPlay = AutonPlays.startRight_Vault_SwitchLeft;
-					} else {
-						curPlay = AutonPlays.startRight_Vault_SwitchRight;
+						switch (secondTarget) {
+						case Scale:
+							if (scalePosition == 'L') {
+								curPlay = AutonPlays.startLeft_SwitchLeft_ScaleLeft;
+							} else {
+								curPlay = AutonPlays.startLeft_SwitchLeft_ScaleRight;
+							}
+							break;
+						case Switch:
+							curPlay = AutonPlays.startLeft_SwitchLeft_SwitchLeft;
+							break;
+						case Vault:
+							curPlay = AutonPlays.startLeft_SwitchLeft_Vault;
+							break;
+						}
 					}
-					break;
-				case Vault:
-					curPlay = AutonPlays.startRight_Vault_Vault;
-					break;
+					// Start Left Switch Right
+					else {
+						switch (secondTarget) {
+						case Scale:
+							if (scalePosition == 'L') {
+								curPlay = AutonPlays.startLeft_SwitchRight_ScaleLeft;
+							} else {
+								curPlay = AutonPlays.startLeft_SwitchRight_ScaleRight;
+							}
+							break;
+						case Switch:
+							curPlay = AutonPlays.startLeft_SwitchRight_SwitchRight;
+							break;
+						case Vault:
+							curPlay = AutonPlays.startLeft_SwitchRight_Vault;
+							break;
+						}
+					}
+				}
+				// Start Left Vault
+				else if (firstTarget == target.Vault) {
+					switch (secondTarget) {
+					case Scale:
+						if (scalePosition == 'L') {
+							curPlay = AutonPlays.startLeft_Vault_ScaleLeft;
+						} else {
+							curPlay = AutonPlays.startLeft_Vault_ScaleRight;
+						}
+						break;
+					case Switch:
+						if (switchPosition == 'L') {
+							curPlay = AutonPlays.startLeft_Vault_SwitchLeft;
+						} else {
+							curPlay = AutonPlays.startLeft_Vault_SwitchRight;
+						}
+						break;
+					case Vault:
+						curPlay = AutonPlays.startLeft_Vault_Vault;
+						break;
+					}
+				}
+			}
+			// All Start Center Logic
+			else if (startPosition == startingPosition.Center) {
+				if (firstTarget == target.Scale) {
+					if (scalePosition == 'L') {
+						switch (secondTarget) {
+						case Scale:
+							curPlay = AutonPlays.startCenter_ScaleLeft_ScaleLeft;
+							break;
+						case Switch:
+							if (switchPosition == 'L') {
+								curPlay = AutonPlays.startCenter_ScaleLeft_SwitchLeft;
+							} else {
+								curPlay = AutonPlays.startCenter_ScaleLeft_SwitchRight;
+							}
+							break;
+						case Vault:
+							curPlay = AutonPlays.startCenter_ScaleLeft_Vault;
+							break;
+						}
+					}
+					// Start Center Scale Right
+					else {
+						switch (secondTarget) {
+						case Scale:
+							curPlay = AutonPlays.startCenter_ScaleRight_ScaleRight;
+							break;
+						case Switch:
+							if (switchPosition == 'L') {
+								curPlay = AutonPlays.startCenter_ScaleRight_SwitchLeft;
+							} else {
+								curPlay = AutonPlays.startCenter_ScaleRight_SwitchRight;
+							}
+							break;
+						case Vault:
+							curPlay = AutonPlays.startCenter_ScaleRight_Vault;
+							break;
+						}
+					}
+				}
+				// Start Center Switch Left
+				else if (firstTarget == target.Switch) {
+					if (switchPosition == 'L') {
+						switch (secondTarget) {
+						case Scale:
+							if (scalePosition == 'L') {
+								curPlay = AutonPlays.startCenter_SwitchLeft_ScaleLeft;
+							} else {
+								curPlay = AutonPlays.startCenter_SwitchLeft_ScaleRight;
+							}
+							break;
+						case Switch:
+							curPlay = AutonPlays.startCenter_SwitchLeft_SwitchLeft;
+							break;
+						case Vault:
+							curPlay = AutonPlays.startCenter_SwitchLeft_Vault;
+							break;
+						}
+					}
+					// Start Center Switch Right
+					else {
+						switch (secondTarget) {
+						case Scale:
+							if (scalePosition == 'L') {
+								curPlay = AutonPlays.startCenter_SwitchRight_ScaleLeft;
+							} else {
+								curPlay = AutonPlays.startCenter_SwitchRight_ScaleRight;
+							}
+							break;
+						case Switch:
+							curPlay = AutonPlays.startCenter_SwitchRight_SwitchRight;
+							break;
+						case Vault:
+							curPlay = AutonPlays.startCenter_SwitchRight_Vault;
+							break;
+						}
+					}
+				}
+				// Start Center Vault
+				else if (firstTarget == target.Vault) {
+					switch (secondTarget) {
+					case Scale:
+						if (scalePosition == 'L') {
+							curPlay = AutonPlays.startCenter_Vault_ScaleLeft;
+						} else {
+							curPlay = AutonPlays.startCenter_Vault_ScaleRight;
+						}
+						break;
+					case Switch:
+						if (switchPosition == 'L') {
+							curPlay = AutonPlays.startCenter_Vault_SwitchLeft;
+						} else {
+							curPlay = AutonPlays.startCenter_Vault_SwitchRight;
+						}
+						break;
+					case Vault:
+						curPlay = AutonPlays.startCenter_Vault_Vault;
+						break;
+					}
+				}
+			}
+			// All Start Right Logic
+			else if (startPosition == startingPosition.Right) {
+				if (firstTarget == target.Scale) {
+					if (scalePosition == 'L') {
+						switch (secondTarget) {
+						case Scale:
+							curPlay = AutonPlays.startRight_ScaleLeft_ScaleLeft;
+							break;
+						case Switch:
+							if (switchPosition == 'L') {
+								curPlay = AutonPlays.startRight_ScaleLeft_SwitchLeft;
+							} else {
+								curPlay = AutonPlays.startRight_ScaleLeft_SwitchRight;
+							}
+							break;
+						case Vault:
+							curPlay = AutonPlays.startRight_ScaleLeft_Vault;
+							break;
+						}
+					}
+					// Start Right Scale Right
+					else {
+						switch (secondTarget) {
+						case Scale:
+							curPlay = AutonPlays.startRight_ScaleRight_ScaleRight;
+							break;
+						case Switch:
+							if (switchPosition == 'L') {
+								curPlay = AutonPlays.startRight_ScaleRight_SwitchLeft;
+							} else {
+								curPlay = AutonPlays.startRight_ScaleRight_SwitchRight;
+							}
+							break;
+						case Vault:
+							curPlay = AutonPlays.startRight_ScaleRight_Vault;
+							break;
+						}
+					}
+				}
+				// Start Right Switch Left
+				else if (firstTarget == target.Switch) {
+					if (switchPosition == 'L') {
+						switch (secondTarget) {
+						case Scale:
+							if (scalePosition == 'L') {
+								curPlay = AutonPlays.startRight_SwitchLeft_ScaleLeft;
+							} else {
+								curPlay = AutonPlays.startRight_SwitchLeft_ScaleRight;
+							}
+							break;
+						case Switch:
+							curPlay = AutonPlays.startRight_SwitchLeft_SwitchLeft;
+							break;
+						case Vault:
+							curPlay = AutonPlays.startRight_SwitchLeft_Vault;
+							break;
+						}
+					}
+					// Start Right Switch Right
+					else {
+						switch (secondTarget) {
+						case Scale:
+							if (scalePosition == 'L') {
+								curPlay = AutonPlays.startRight_SwitchRight_ScaleLeft;
+							} else {
+								curPlay = AutonPlays.startRight_SwitchRight_ScaleRight;
+							}
+							break;
+						case Switch:
+							curPlay = AutonPlays.startRight_SwitchRight_SwitchRight;
+							break;
+						case Vault:
+							curPlay = AutonPlays.startRight_SwitchRight_Vault;
+							break;
+						}
+					}
+				}
+				// Start Right Vault
+				else if (firstTarget == target.Vault) {
+					switch (secondTarget) {
+					case Scale:
+						if (scalePosition == 'L') {
+							curPlay = AutonPlays.startRight_Vault_ScaleLeft;
+						} else {
+							curPlay = AutonPlays.startRight_Vault_ScaleRight;
+						}
+						break;
+					case Switch:
+						if (switchPosition == 'L') {
+							curPlay = AutonPlays.startRight_Vault_SwitchLeft;
+						} else {
+							curPlay = AutonPlays.startRight_Vault_SwitchRight;
+						}
+						break;
+					case Vault:
+						curPlay = AutonPlays.startRight_Vault_Vault;
+						break;
+					}
 				}
 			}
 		}
