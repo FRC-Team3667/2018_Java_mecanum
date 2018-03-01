@@ -1,6 +1,9 @@
 package org.usfirst.frc.team3667.robot;
 
+import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Joystick;
@@ -57,35 +60,29 @@ public class Robot extends IterativeRobot {
 	public enum AutonPlays {
 		driveForwardOnly,
 		// Start Left Scale Left
-		startLeft_ScaleLeft_ScaleLeft, startLeft_ScaleLeft_SwitchLeft, startLeft_ScaleLeft_SwitchRight, startLeft_ScaleLeft_Vault,
+		startLeft_ScaleLeft_ScaleLeft, startLeft_ScaleLeft_SwitchLeft, startLeft_ScaleLeft_SwitchRight, startLeft_ScaleLeft_None,
 		// Start Left Scale Right
-		startLeft_ScaleRight_ScaleRight, startLeft_ScaleRight_SwitchLeft, startLeft_ScaleRight_SwitchRight, startLeft_ScaleRight_Vault,
+		startLeft_ScaleRight_ScaleRight, startLeft_ScaleRight_SwitchLeft, startLeft_ScaleRight_SwitchRight, startLeft_ScaleRight_None,
 		// Start Left Switch Left
-		startLeft_SwitchLeft_SwitchLeft, startLeft_SwitchLeft_ScaleRight, startLeft_SwitchLeft_ScaleLeft, startLeft_SwitchLeft_Vault,
+		startLeft_SwitchLeft_SwitchLeft, startLeft_SwitchLeft_ScaleRight, startLeft_SwitchLeft_ScaleLeft, startLeft_SwitchLeft_None,
 		// Start Left Switch Right
-		startLeft_SwitchRight_ScaleLeft, startLeft_SwitchRight_ScaleRight, startLeft_SwitchRight_SwitchRight, startLeft_SwitchRight_Vault,
-		// Start Left Vault
-		startLeft_Vault_ScaleLeft, startLeft_Vault_ScaleRight, startLeft_Vault_SwitchRight, startLeft_Vault_SwitchLeft, startLeft_Vault_Vault,
+		startLeft_SwitchRight_ScaleLeft, startLeft_SwitchRight_ScaleRight, startLeft_SwitchRight_SwitchRight, startLeft_SwitchRight_None,
 		// Start Center Scale Left
-		startCenter_ScaleLeft_ScaleLeft, startCenter_ScaleLeft_SwitchLeft, startCenter_ScaleLeft_SwitchRight, startCenter_ScaleLeft_Vault,
+		startCenter_ScaleLeft_ScaleLeft, startCenter_ScaleLeft_SwitchLeft, startCenter_ScaleLeft_SwitchRight, startCenter_ScaleLeft_None,
 		// Start Center Scale Right
-		startCenter_ScaleRight_ScaleRight, startCenter_ScaleRight_SwitchLeft, startCenter_ScaleRight_SwitchRight, startCenter_ScaleRight_Vault,
+		startCenter_ScaleRight_ScaleRight, startCenter_ScaleRight_SwitchLeft, startCenter_ScaleRight_SwitchRight, startCenter_ScaleRight_None,
 		// Start Center Switch Left
-		startCenter_SwitchLeft_SwitchLeft, startCenter_SwitchLeft_ScaleRight, startCenter_SwitchLeft_ScaleLeft, startCenter_SwitchLeft_Vault,
+		startCenter_SwitchLeft_SwitchLeft, startCenter_SwitchLeft_ScaleRight, startCenter_SwitchLeft_ScaleLeft, startCenter_SwitchLeft_None,
 		// Start Center Switch Right
-		startCenter_SwitchRight_ScaleLeft, startCenter_SwitchRight_ScaleRight, startCenter_SwitchRight_SwitchRight, startCenter_SwitchRight_Vault,
-		// Start Center Vault
-		startCenter_Vault_ScaleLeft, startCenter_Vault_ScaleRight, startCenter_Vault_SwitchRight, startCenter_Vault_SwitchLeft, startCenter_Vault_Vault,
+		startCenter_SwitchRight_ScaleLeft, startCenter_SwitchRight_ScaleRight, startCenter_SwitchRight_SwitchRight, startCenter_SwitchRight_None,
 		// Start Right Scale Left
-		startRight_ScaleLeft_ScaleLeft, startRight_ScaleLeft_SwitchLeft, startRight_ScaleLeft_SwitchRight, startRight_ScaleLeft_Vault,
+		startRight_ScaleLeft_ScaleLeft, startRight_ScaleLeft_SwitchLeft, startRight_ScaleLeft_SwitchRight, startRight_ScaleLeft_None,
 		// Start Right Scale Right
-		startRight_ScaleRight_ScaleRight, startRight_ScaleRight_SwitchLeft, startRight_ScaleRight_SwitchRight, startRight_ScaleRight_Vault,
+		startRight_ScaleRight_ScaleRight, startRight_ScaleRight_SwitchLeft, startRight_ScaleRight_SwitchRight, startRight_ScaleRight_None,
 		// Start Right Switch Left
-		startRight_SwitchLeft_SwitchLeft, startRight_SwitchLeft_ScaleRight, startRight_SwitchLeft_ScaleLeft, startRight_SwitchLeft_Vault,
+		startRight_SwitchLeft_SwitchLeft, startRight_SwitchLeft_ScaleRight, startRight_SwitchLeft_ScaleLeft, startRight_SwitchLeft_None,
 		// Start Right Switch Right
-		startRight_SwitchRight_ScaleLeft, startRight_SwitchRight_ScaleRight, startRight_SwitchRight_SwitchRight, startRight_SwitchRight_Vault,
-		// Start Right Vault
-		startRight_Vault_ScaleLeft, startRight_Vault_ScaleRight, startRight_Vault_SwitchRight, startRight_Vault_SwitchLeft, startRight_Vault_Vault,
+		startRight_SwitchRight_ScaleLeft, startRight_SwitchRight_ScaleRight, startRight_SwitchRight_SwitchRight, startRight_SwitchRight_None,
 	};
 
 	public enum Action {
@@ -97,7 +94,7 @@ public class Robot extends IterativeRobot {
 	}
 
 	public enum target {
-		Switch, Scale, Vault
+		Switch, Scale, None
 	}
 
 	public enum cubePickup {
@@ -109,6 +106,9 @@ public class Robot extends IterativeRobot {
 	private Encoder leftEncoder = new Encoder(0, 1, false, EncodingType.k4X);
 	private Encoder rightEncoder = new Encoder(2, 3, true, EncodingType.k4X);
 	private Encoder liftEncoder = new Encoder(4, 5, false, EncodingType.k4X);
+	private DigitalInput limitSwitchHigh = new DigitalInput(6);
+	private DigitalInput limitSwitchLow = new DigitalInput(7);
+
 	// Encoder Values for 17.
 	// private Encoder leftEncoder = new Encoder(0, 1, true, EncodingType.k4X);
 	// private Encoder rightEncoder = new Encoder(2, 3, false,
@@ -123,11 +123,13 @@ public class Robot extends IterativeRobot {
 	WPI_TalonSRX _rearLeftMotor = new WPI_TalonSRX(10);
 	WPI_TalonSRX _lift = new WPI_TalonSRX(14);
 	WPI_TalonSRX _lift2 = new WPI_TalonSRX(15);
+	WPI_TalonSRX _pickupLeft = new WPI_TalonSRX(16);
+	WPI_TalonSRX _pickupRight = new WPI_TalonSRX(17);
 	SpeedControllerGroup leftMotors = new SpeedControllerGroup(_frontLeftMotor, _rearLeftMotor);
 	SpeedControllerGroup rightMotors = new SpeedControllerGroup(_frontRightMotor, _rearRightMotor);
 	DifferentialDrive _drive = new DifferentialDrive(leftMotors, rightMotors);
 	Joystick _joy = new Joystick(0);
-	Joystick _climberJoy = new Joystick(1);
+	Joystick _cubeJoy = new Joystick(1);
 
 	double desiredCubeHeight = 0;
 
@@ -135,6 +137,13 @@ public class Robot extends IterativeRobot {
 	AutonPlays curPlay = AutonPlays.driveForwardOnly;
 
 	double lastValidDirection = 0;
+
+	// Pneumatics variables
+	Compressor compressor = new Compressor(6);
+	DoubleSolenoid solenoid = new DoubleSolenoid(1, 2); // replace with actual
+														// device ids once
+														// configured in
+														// Silverlight please -M
 
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -158,45 +167,62 @@ public class Robot extends IterativeRobot {
 		liftEncoder.reset();
 		// Setup the menu for position selection.
 		startingPositionRadio = new SendableChooser<startingPosition>();
-		startingPositionRadio.addObject("LEFT", startingPosition.Left);
-		startingPositionRadio.addDefault("CENTER", startingPosition.Center);
-		startingPositionRadio.addObject("RIGHT", startingPosition.Right);
-		SmartDashboard.putData("STARTING POSITION", startingPositionRadio);
+		startingPositionRadio.addObject("Left", startingPosition.Left);
+		startingPositionRadio.addDefault("Center", startingPosition.Center);
+		startingPositionRadio.addObject("Right", startingPosition.Right);
+		SmartDashboard.putData("Starting Position", startingPositionRadio);
 		// First Target Selector.
 		firstTargetRadio = new SendableChooser<target>();
-		firstTargetRadio.addDefault("SCALE", target.Scale);
-		firstTargetRadio.addObject("SWITCH", target.Switch);
-		firstTargetRadio.addObject("VAULT", target.Vault);
-		SmartDashboard.putData("FIRST TARGET", firstTargetRadio);
+		firstTargetRadio.addDefault("Scale", target.Scale);
+		firstTargetRadio.addObject("Switch", target.Switch);
+		SmartDashboard.putData("First Targer", firstTargetRadio);
 		// Cube Pickup Selector.
-		cubePickupRadio = new SendableChooser();
-		cubePickupRadio.addDefault("One", cubePickup.One);
-		cubePickupRadio.addObject("Two", cubePickup.Two);
-		cubePickupRadio.addObject("Three", cubePickup.Three);
-		cubePickupRadio.addObject("Four", cubePickup.Four);
-		cubePickupRadio.addObject("Five", cubePickup.Five);
-		cubePickupRadio.addObject("Six", cubePickup.Six);
-		SmartDashboard.putData("CUBE PICKUP", cubePickupRadio);
+		// cubePickupRadio = new SendableChooser();
+		// cubePickupRadio.addDefault("One", cubePickup.One);
+		// cubePickupRadio.addObject("Two", cubePickup.Two);
+		// cubePickupRadio.addObject("Three", cubePickup.Three);
+		// cubePickupRadio.addObject("Four", cubePickup.Four);
+		// cubePickupRadio.addObject("Five", cubePickup.Five);
+		// cubePickupRadio.addObject("Six", cubePickup.Six);
+		// SmartDashboard.putData("CUBE PICKUP", cubePickupRadio);
 		// Second Target Selector.
-		secondTargetRadio = new SendableChooser();
-		secondTargetRadio.addDefault("SCALE", target.Scale);
-		secondTargetRadio.addObject("SWITCH", target.Switch);
-		secondTargetRadio.addObject("VAULT", target.Vault);
-		SmartDashboard.putData("SECOND TARGET", secondTargetRadio);
+		secondTargetRadio = new SendableChooser<target>();
+		secondTargetRadio.addDefault("Scale", target.Scale);
+		secondTargetRadio.addObject("Switch", target.Switch);
+		secondTargetRadio.addObject("None", target.None);
+		SmartDashboard.putData("Second Target", secondTargetRadio);
+
+		compressor.setClosedLoopControl(true);
+
+		// solenoid code, move these bits to their own methods before deploying!
+		solenoid.set(DoubleSolenoid.Value.kOff); // turns it off
+		solenoid.set(DoubleSolenoid.Value.kForward); // activates its "forward"
+														// channel
+		solenoid.set(DoubleSolenoid.Value.kReverse); // activates its "reverse"
+														// channel
 	}
 
 	/**
 	 * This function is called periodically during operator control
 	 */
 	public void teleopPeriodic() {
+
 		// Update the Smart Dashboard Data
 		updateSmartDashboardData();
 		if (_joy.getRawAxis(2) != 0) {
-			_lift.set(_joy.getRawAxis(2));
-			_lift2.set(_joy.getRawAxis(2));
+			_pickupLeft.set(_joy.getRawAxis(2));
+			_pickupRight.set(_joy.getRawAxis(2));
 		} else {
-			_lift.set(_joy.getRawAxis(3) * -1.0);
-			_lift2.set(_joy.getRawAxis(3) * -1.0);
+			_pickupLeft.set(_joy.getRawAxis(3) * -1.0);
+			_pickupRight.set(_joy.getRawAxis(3) * -1.0);
+		}
+		
+		if (_cubeJoy.getRawAxis(2) != 0) {
+			_lift.set(_cubeJoy.getRawAxis(2));
+			_lift2.set(_cubeJoy.getRawAxis(2));
+		} else {
+			_lift.set(_cubeJoy.getRawAxis(3) * -1.0);
+			_lift2.set(_cubeJoy.getRawAxis(3) * -1.0);
 		}
 
 		if (_joy.getRawButton(4)) {
@@ -270,8 +296,8 @@ public class Robot extends IterativeRobot {
 		case startCenter_ScaleLeft_SwitchRight:
 			startCenterScaleLeftSwitchRight();
 			break;
-		case startCenter_ScaleLeft_Vault:
-			startCenterScaleLeftVault();
+		case startCenter_ScaleLeft_None:
+			startCenterScaleLeftNone();
 			break;
 		case startCenter_ScaleRight_ScaleRight:
 			startCenterScaleRightScaleRight();
@@ -282,8 +308,8 @@ public class Robot extends IterativeRobot {
 		case startCenter_ScaleRight_SwitchRight:
 			startCenterScaleRightSwitchRight();
 			break;
-		case startCenter_ScaleRight_Vault:
-			startCenterScaleRightVault();
+		case startCenter_ScaleRight_None:
+			startCenterScaleRightNone();
 			break;
 		case startCenter_SwitchLeft_ScaleLeft:
 			startCenterSwitchLeftScaleLeft();
@@ -294,8 +320,8 @@ public class Robot extends IterativeRobot {
 		case startCenter_SwitchLeft_SwitchLeft:
 			startCenterSwitchLeftSwitchLeft();
 			break;
-		case startCenter_SwitchLeft_Vault:
-			startCenterSwitchLeftVault();
+		case startCenter_SwitchLeft_None:
+			startCenterSwitchLeftNone();
 			break;
 		case startCenter_SwitchRight_ScaleLeft:
 			startCenterSwitchRightScaleLeft();
@@ -306,23 +332,8 @@ public class Robot extends IterativeRobot {
 		case startCenter_SwitchRight_SwitchRight:
 			startCenterSwitchRightSwitchRight();
 			break;
-		case startCenter_SwitchRight_Vault:
-			startCenterSwitchRightVault();
-			break;
-		case startCenter_Vault_ScaleLeft:
-			startCenterVaultScaleLeft();
-			break;
-		case startCenter_Vault_ScaleRight:
-			startCenterVaultScaleRight();
-			break;
-		case startCenter_Vault_SwitchLeft:
-			startCenterVaultSwitchLeft();
-			break;
-		case startCenter_Vault_SwitchRight:
-			startCenterVaultSwitchRight();
-			break;
-		case startCenter_Vault_Vault:
-			startCenterVaultVault();
+		case startCenter_SwitchRight_None:
+			startCenterSwitchRightNone();
 			break;
 		case startLeft_ScaleLeft_ScaleLeft:
 			startLeftScaleLeftScaleLeft();
@@ -333,8 +344,8 @@ public class Robot extends IterativeRobot {
 		case startLeft_ScaleLeft_SwitchRight:
 			startLeftScaleLeftSwitchRight();
 			break;
-		case startLeft_ScaleLeft_Vault:
-			startLeftScaleLeftVault();
+		case startLeft_ScaleLeft_None:
+			startLeftScaleLeftNone();
 			break;
 		case startLeft_ScaleRight_ScaleRight:
 			startLeftScaleRightScaleRight();
@@ -343,10 +354,10 @@ public class Robot extends IterativeRobot {
 			startLeftScaleRightSwitchLeft();
 			break;
 		case startLeft_ScaleRight_SwitchRight:
-			startLeftScaleRightVault();
+			startLeftScaleRightSwitchRight();
 			break;
-		case startLeft_ScaleRight_Vault:
-			startLeft_ScaleRight_Vault();
+		case startLeft_ScaleRight_None:
+			startLeft_ScaleRight_None();
 			break;
 		case startLeft_SwitchLeft_ScaleLeft:
 			startLeftSwitchLeftScaleLeft();
@@ -357,8 +368,8 @@ public class Robot extends IterativeRobot {
 		case startLeft_SwitchLeft_SwitchLeft:
 			startLeftSwitchLeftSwitchLeft();
 			break;
-		case startLeft_SwitchLeft_Vault:
-			startLeftSwitchLeftVault();
+		case startLeft_SwitchLeft_None:
+			startLeftSwitchLeftNone();
 			break;
 		case startLeft_SwitchRight_ScaleLeft:
 			startLeftSwitchRightScaleLeft();
@@ -369,23 +380,8 @@ public class Robot extends IterativeRobot {
 		case startLeft_SwitchRight_SwitchRight:
 			startLeftSwitchRightSwitchRight();
 			break;
-		case startLeft_SwitchRight_Vault:
-			startLeftSwitchRightVault();
-			break;
-		case startLeft_Vault_ScaleLeft:
-			startLeftVaultScaleLeft();
-			break;
-		case startLeft_Vault_ScaleRight:
-			startLeftVaultScaleRight();
-			break;
-		case startLeft_Vault_SwitchLeft:
-			startLeftVaultSwitchLeft();
-			break;
-		case startLeft_Vault_SwitchRight:
-			startLeftVaultSwitchRight();
-			break;
-		case startLeft_Vault_Vault:
-			startLeftVaultVault();
+		case startLeft_SwitchRight_None:
+			startLeftSwitchRightNone();
 			break;
 		case startRight_ScaleLeft_ScaleLeft:
 			startRightScaleLeftScaleLeft();
@@ -396,8 +392,8 @@ public class Robot extends IterativeRobot {
 		case startRight_ScaleLeft_SwitchRight:
 			startRightScaleLeftSwitchRight();
 			break;
-		case startRight_ScaleLeft_Vault:
-			startRightScaleLeftVault();
+		case startRight_ScaleLeft_None:
+			startRightScaleLeftNone();
 			break;
 		case startRight_ScaleRight_ScaleRight:
 			startRightScaleRightScaleRight();
@@ -408,8 +404,8 @@ public class Robot extends IterativeRobot {
 		case startRight_ScaleRight_SwitchRight:
 			startRightScaleRightSwitchRight();
 			break;
-		case startRight_ScaleRight_Vault:
-			startRightScaleRightVault();
+		case startRight_ScaleRight_None:
+			startRightScaleRightNone();
 			break;
 		case startRight_SwitchLeft_ScaleLeft:
 			startRightSwitchLeftScaleLeft();
@@ -420,8 +416,8 @@ public class Robot extends IterativeRobot {
 		case startRight_SwitchLeft_SwitchLeft:
 			startRightSwitchLeftSwitchLeft();
 			break;
-		case startRight_SwitchLeft_Vault:
-			startRightSwitchLeftVault();
+		case startRight_SwitchLeft_None:
+			startRightSwitchLeftNone();
 			break;
 		case startRight_SwitchRight_ScaleLeft:
 			startRightSwitchRightScaleLeft();
@@ -432,23 +428,8 @@ public class Robot extends IterativeRobot {
 		case startRight_SwitchRight_SwitchRight:
 			startRightSwitchRightSwitchRight();
 			break;
-		case startRight_SwitchRight_Vault:
-			startRightSwitchRightVault();
-			break;
-		case startRight_Vault_ScaleLeft:
-			startRightVaultScaleLeft();
-			break;
-		case startRight_Vault_ScaleRight:
-			startRightVaultScaleRight();
-			break;
-		case startRight_Vault_SwitchLeft:
-			startRightVaultSwitchLeft();
-			break;
-		case startRight_Vault_SwitchRight:
-			startRightVaultSwitchRight();
-			break;
-		case startRight_Vault_Vault:
-			startRightVaultVault();
+		case startRight_SwitchRight_None:
+			startRightSwitchRightNone();
 			break;
 		default:
 			break;
@@ -516,8 +497,10 @@ public class Robot extends IterativeRobot {
 	}
 
 	private void startCenterScaleLeftSwitchLeft() {
-		// TODO Auto-generated method stub
+		switch (autonStep) {
+		case 1:
 
+		}
 	}
 
 	private void startCenterScaleLeftSwitchRight() {
@@ -525,7 +508,7 @@ public class Robot extends IterativeRobot {
 
 	}
 
-	private void startCenterScaleLeftVault() {
+	private void startCenterScaleLeftNone() {
 		// TODO Auto-generated method stub
 
 	}
@@ -589,11 +572,68 @@ public class Robot extends IterativeRobot {
 	}
 
 	private void startCenterScaleRightSwitchRight() {
-		// TODO Auto-generated method stub
+		switch (autonStep) {
+		case 1:
+			robotAction(Direction.FORWARD, 12, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 2:
+			robotAction(Direction.RIGHT, 45, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 3:
+			robotAction(Direction.FORWARD, 70, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 4:
+			robotAction(Direction.LEFT, 45, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 5:
+			robotAction(Direction.FORWARD, 27, 75, 48, 0, 0);
+			autonStep++;
+			break;
+		case 6:
+			robotAction(Direction.CUBEACTION, 0, 0, 48, 100, 1);
+			autonStep++;
+			break;
+		case 7:
+			robotAction(Direction.REVERSE, 27, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 8:
+			robotAction(Direction.LEFT, 45, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 9:
+			robotAction(Direction.FORWARD, 36, 75, 0, -100, 0);
+			autonStep++;
+			break;
+		case 10:
+			robotAction(Direction.CUBEACTION, 0, 0, 0, -100, 1);
+			autonStep++;
+			break;
+		case 11:
+			robotAction(Direction.REVERSE, 36, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 12:
+			robotAction(Direction.RIGHT, 45, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 13:
+			robotAction(Direction.FORWARD, 27, 75, 48, 0, 0);
+			autonStep++;
+			break;
+		case 14:
+			robotAction(Direction.CUBEACTION, 0, 0, 48, 100, 1);
+			autonStep++;
+			break;
+		}
 
 	}
 
-	private void startCenterScaleRightVault() {
+	private void startCenterScaleRightNone() {
 		// TODO Auto-generated method stub
 
 	}
@@ -609,13 +649,93 @@ public class Robot extends IterativeRobot {
 	}
 
 	private void startCenterSwitchLeftSwitchLeft() {
-		// TODO Auto-generated method stub
-
+		switch (autonStep) {
+		case 1:
+			robotAction(Direction.FORWARD, 12, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 2:
+			robotAction(Direction.LEFT, 45, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 3:
+			robotAction(Direction.FORWARD, 70, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 4:
+			robotAction(Direction.RIGHT, 45, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 5:
+			robotAction(Direction.FORWARD, 27, 75, 48, 0, 0);
+			autonStep++;
+			break;
+		case 6:
+			robotAction(Direction.CUBEACTION, 0, 0, 48, 100, 1);
+			autonStep++;
+			break;
+		case 7:
+			robotAction(Direction.REVERSE, 27, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 8:
+			robotAction(Direction.RIGHT, 45, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 9:
+			robotAction(Direction.FORWARD, 36, 75, 0, -100, 0);
+			autonStep++;
+			break;
+		case 10:
+			robotAction(Direction.CUBEACTION, 0, 0, 0, -100, 1);
+			autonStep++;
+			break;
+		case 11:
+			robotAction(Direction.REVERSE, 36, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 12:
+			robotAction(Direction.LEFT, 45, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 13:
+			robotAction(Direction.FORWARD, 27, 75, 48, 0, 0);
+			autonStep++;
+			break;
+		case 14:
+			robotAction(Direction.CUBEACTION, 0, 0, 48, 100, 1);
+			autonStep++;
+			break;
+		}
 	}
 
-	private void startCenterSwitchLeftVault() {
-		// TODO Auto-generated method stub
-
+	private void startCenterSwitchLeftNone() {
+		switch (autonStep) {
+		case 1:
+			robotAction(Direction.FORWARD, 12, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 2:
+			robotAction(Direction.LEFT, 45, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 3:
+			robotAction(Direction.FORWARD, 70, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 4:
+			robotAction(Direction.RIGHT, 45, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 5:
+			robotAction(Direction.FORWARD, 27, 75, 48, 0, 0);
+			autonStep++;
+			break;
+		case 6:
+			robotAction(Direction.CUBEACTION, 0, 0, 48, 100, 1);
+			autonStep++;
+			break;
+		}
 	}
 
 	private void startCenterSwitchRightScaleLeft() {
@@ -633,32 +753,56 @@ public class Robot extends IterativeRobot {
 
 	}
 
-	private void startCenterSwitchRightVault() {
+	private void startCenterSwitchRightNone() {
+		switch (autonStep) {
+		case 1:
+			robotAction(Direction.FORWARD, 12, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 2:
+			robotAction(Direction.RIGHT, 45, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 3:
+			robotAction(Direction.FORWARD, 70, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 4:
+			robotAction(Direction.LEFT, 45, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 5:
+			robotAction(Direction.FORWARD, 27, 75, 48, 0, 0);
+			autonStep++;
+			break;
+		case 6:
+			robotAction(Direction.CUBEACTION, 0, 0, 48, 100, 1);
+			autonStep++;
+			break;
+		}
+	}
+
+	private void startCenterNoneScaleLeft() {
 		// TODO Auto-generated method stub
 
 	}
 
-	private void startCenterVaultScaleLeft() {
+	private void startCenterNoneScaleRight() {
 		// TODO Auto-generated method stub
 
 	}
 
-	private void startCenterVaultScaleRight() {
+	private void startCenterNoneSwitchLeft() {
 		// TODO Auto-generated method stub
 
 	}
 
-	private void startCenterVaultSwitchLeft() {
+	private void startCenterNoneSwitchRight() {
 		// TODO Auto-generated method stub
 
 	}
 
-	private void startCenterVaultSwitchRight() {
-		// TODO Auto-generated method stub
-
-	}
-
-	private void startCenterVaultVault() {
+	private void startCenterNoneNone() {
 		// TODO Auto-generated method stub
 
 	}
@@ -806,83 +950,91 @@ public class Robot extends IterativeRobot {
 		}
 	}
 
-	private void startLeftScaleLeftVault() {
+	private void startLeftScaleLeftNone() {
 		// TODO Auto-generated method stub
 
 	}
 
 	private void startLeftScaleRightScaleRight() {
-		switch (autonStep)
-		{
-			case 1:
-				robotAction(Direction.FORWARD, 215, 90, 0, 0, 0);
-				autonStep++;
-				break;
-			case 2:
-				robotAction(Direction.RIGHT, 90, 60, 0, 0, 0);
-				autonStep++;
-				break;
-			case 3:
-				robotAction(Direction.FORWARD, 226, 75, 0, 0, 0);
-				autonStep++;
-				break;
-			case 4:
-				robotAction(Direction.LEFT, 90, 60, 0, 0, 0);
-				autonStep++;
-				break;
-			case 5:
-				robotAction(Direction.FORWARD, 79, 60, 0, 0, 0);
-				autonStep++;
-				break;
-			case 6:
-				robotAction(Direction.LEFT, 90, 60, 0, 0, 0);
-				autonStep++;
-				break;
-			case 7:
-				robotAction(Direction.FORWARD, 15, 75, 0, 0, 0);
-				autonStep++;
-				break;
-			case 8:
-				robotAction(Direction.CUBEACTION, 0, 0, 85, 100, 1);
-				autonStep++;
-				break;
-			case 9:
-				robotAction(Direction.REVERSE, 15, 75, 0, 0, 0);
-				autonStep++;
-				break;
-			case 10:
-				robotAction(Direction.LEFT, 75, 60, 0, 0, 0);
-				autonStep++;
-				break;
-			case 11:
-				robotAction(Direction.FORWARD, 112, 75, 0, -100, 0);
-				autonStep++;
-				break;
-			case 12:
-				robotAction(Direction.CUBEACTION, 0, 0, 0, -100, 1);
-				autonStep++;
-				break;
-			case 13:
-				robotAction(Direction.RIGHT, 180, 60, 0, 0, 0);
-				autonStep++;
-				break;
-			case 14:
-				robotAction(Direction.FORWARD, 112, 75, 0, -100, 0);
-				autonStep++;
-				break;
-			case 15:
-				robotAction(Direction.LEFT, 115, 60, 0, 0, 0);
-				autonStep++;
-				break;
-			case 16:
-				robotAction(Direction.FORWARD, 15, 75, 0, 0, 0);
-				autonStep++;
-				break;
-			case 17:
-				robotAction(Direction.CUBEACTION, 0, 0, 85, 100, 1);
-				autonStep++;
-				break;
+		switch (autonStep) {
+		case 1:
+			robotAction(Direction.FORWARD, 215, 90, 0, 0, 0);
+			autonStep++;
+			break;
+		case 2:
+			robotAction(Direction.RIGHT, 90, 60, 0, 0, 0);
+			autonStep++;
+			break;
+		case 3:
+			robotAction(Direction.FORWARD, 200, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 4:
+			robotAction(Direction.LEFT, 90, 60, 0, 0, 0);
+			autonStep++;
+			break;
+		case 5:
+			robotAction(Direction.FORWARD, 79, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 6:
+			robotAction(Direction.LEFT, 90, 60, 85, 0, 0);
+			autonStep++;
+			break;
+		case 7:
+			robotAction(Direction.FORWARD, 15, 55, 85, 0, 0);
+			autonStep++;
+			break;
+		case 8:
+			robotAction(Direction.CUBEACTION, 0, 0, 85, 100, 1);
+			autonStep++;
+			break;
+		case 9:
+			robotAction(Direction.REVERSE, 15, 55, 0, 0, 0);
+			autonStep++;
+			break;
+		case 10:
+			robotAction(Direction.LEFT, 75, 60, 0, 0, 0);
+			autonStep++;
+			break;
+		case 11:
+			robotAction(Direction.FORWARD, 112, 75, 0, -100, 0);
+			autonStep++;
+			break;
+		case 12:
+			robotAction(Direction.CUBEACTION, 0, 0, 0, -100, 1);
+			autonStep++;
+			break;
+		case 13:
+			robotAction(Direction.RIGHT, 180, 60, 0, 0, 0);
+			autonStep++;
+			break;
+		case 14:
+			robotAction(Direction.FORWARD, 112, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 15:
+			robotAction(Direction.LEFT, 115, 60, 85, 0, 0);
+			autonStep++;
+			break;
+		case 16:
+			robotAction(Direction.FORWARD, 15, 55, 85, 0, 0);
+			autonStep++;
+			break;
+		case 17:
+			robotAction(Direction.CUBEACTION, 0, 0, 85, 100, 1);
+			autonStep++;
+			break;
+		case 18:
+			robotAction(Direction.REVERSE, 15, 55, 0, 0, 0);
+			autonStep++;
+			break;
 		}
+	}
+
+	private void startLeftScaleRightSwitchRight() {
+		// TODO Auto-generated method stub
+
 	}
 
 	private void startLeftScaleRightSwitchLeft() {
@@ -890,12 +1042,12 @@ public class Robot extends IterativeRobot {
 
 	}
 
-	private void startLeftScaleRightVault() {
+	private void startLeftScaleRightNone() {
 		// TODO Auto-generated method stub
 
 	}
 
-	private void startLeft_ScaleRight_Vault() {
+	private void startLeft_ScaleRight_None() {
 		// TODO Auto-generated method stub
 
 	}
@@ -915,43 +1067,55 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 4:
-			robotAction(Direction.REVERSE, 10, 60, 0, 0, 0);
+			robotAction(Direction.CUBEACTION, 0, 0, 45, 100, 1);
 			autonStep++;
 			break;
 		case 5:
-			robotAction(Direction.LEFT, 90, 40, 0, 0, 0);
+			robotAction(Direction.REVERSE, 10, 60, 0, 0, 0);
 			autonStep++;
 			break;
 		case 6:
-			robotAction(Direction.FORWARD, 13, 60, 0, 0, 0);
-			autonStep++;
-			break;
-		case 7:
-			robotAction(Direction.RIGHT, 90, 40, 0, 0, 0);
-			autonStep++;
-			break;
-		case 8:
-			robotAction(Direction.FORWARD, 13, 60, 0, 0, 0);
-			autonStep++;
-			break;
-		case 9:
-			robotAction(Direction.REVERSE, 13, 60, 0, 0, 0);
-			autonStep++;
-			break;
-		case 10:
 			robotAction(Direction.LEFT, 90, 40, 0, 0, 0);
 			autonStep++;
 			break;
-		case 11:
-			robotAction(Direction.FORWARD, 40, 60, 0, 0, 0);
+		case 7:
+			robotAction(Direction.FORWARD, 13, 60, 0, 0, 0);
 			autonStep++;
 			break;
-		case 12:
+		case 8:
 			robotAction(Direction.RIGHT, 90, 40, 0, 0, 0);
 			autonStep++;
 			break;
+		case 9:
+			robotAction(Direction.FORWARD, 13, 60, 0, 0, 0);
+			autonStep++;
+			break;
+		case 10:
+			robotAction(Direction.CUBEACTION, 0, 0, 0, -100, 1);
+			autonStep++;
+			break;
+		case 11:
+			robotAction(Direction.REVERSE, 13, 60, 0, 0, 0);
+			autonStep++;
+			break;
+		case 12:
+			robotAction(Direction.LEFT, 90, 40, 0, 0, 0);
+			autonStep++;
+			break;
 		case 13:
+			robotAction(Direction.FORWARD, 40, 60, 0, 0, 0);
+			autonStep++;
+			break;
+		case 14:
+			robotAction(Direction.RIGHT, 90, 40, 0, 0, 0);
+			autonStep++;
+			break;
+		case 15:
 			robotAction(Direction.FORWARD, 10, 60, 0, 0, 0);
+			autonStep++;
+			break;
+		case 16:
+			robotAction(Direction.CUBEACTION, 0, 0, 85, 100, 1);
 			autonStep++;
 			break;
 		}
@@ -1011,7 +1175,7 @@ public class Robot extends IterativeRobot {
 		}
 	}
 
-	private void startLeftSwitchLeftVault() {
+	private void startLeftSwitchLeftNone() {
 		// TODO Auto-generated method stub
 
 	}
@@ -1031,39 +1195,111 @@ public class Robot extends IterativeRobot {
 
 	}
 
-	private void startLeftSwitchRightVault() {
+	private void startLeftSwitchRightNone() {
 		// TODO Auto-generated method stub
 
 	}
 
-	private void startLeftVaultScaleLeft() {
+	private void startLeftNoneScaleLeft() {
 		// TODO Auto-generated method stub
 
 	}
 
-	private void startLeftVaultScaleRight() {
+	private void startLeftNoneScaleRight() {
 		// TODO Auto-generated method stub
 
 	}
 
-	private void startLeftVaultSwitchLeft() {
+	private void startLeftNoneSwitchLeft() {
 		// TODO Auto-generated method stub
 
 	}
 
-	private void startLeftVaultSwitchRight() {
+	private void startLeftNoneSwitchRight() {
 		// TODO Auto-generated method stub
 
 	}
 
-	private void startLeftVaultVault() {
+	private void startLeftNoneNone() {
 		// TODO Auto-generated method stub
 
 	}
 
 	private void startRightScaleLeftScaleLeft() {
-		// TODO Auto-generated method stub
-
+		switch (autonStep) {
+		case 1:
+			robotAction(Direction.FORWARD, 215, 90, 0, 0, 0);
+			autonStep++;
+			break;
+		case 2:
+			robotAction(Direction.LEFT, 90, 60, 0, 0, 0);
+			autonStep++;
+			break;
+		case 3:
+			robotAction(Direction.FORWARD, 200, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 4:
+			robotAction(Direction.RIGHT, 90, 60, 0, 0, 0);
+			autonStep++;
+			break;
+		case 5:
+			robotAction(Direction.FORWARD, 79, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 6:
+			robotAction(Direction.RIGHT, 90, 60, 85, 0, 0);
+			autonStep++;
+			break;
+		case 7:
+			robotAction(Direction.FORWARD, 15, 55, 85, 0, 0);
+			autonStep++;
+			break;
+		case 8:
+			robotAction(Direction.CUBEACTION, 0, 0, 85, 100, 1);
+			autonStep++;
+			break;
+		case 9:
+			robotAction(Direction.REVERSE, 15, 55, 0, 0, 0);
+			autonStep++;
+			break;
+		case 10:
+			robotAction(Direction.RIGHT, 75, 60, 0, 0, 0);
+			autonStep++;
+			break;
+		case 11:
+			robotAction(Direction.FORWARD, 112, 75, 0, -100, 0);
+			autonStep++;
+			break;
+		case 12:
+			robotAction(Direction.CUBEACTION, 0, 0, 0, -100, 1);
+			autonStep++;
+			break;
+		case 13:
+			robotAction(Direction.LEFT, 180, 60, 0, 0, 0);
+			autonStep++;
+			break;
+		case 14:
+			robotAction(Direction.FORWARD, 112, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 15:
+			robotAction(Direction.RIGHT, 115, 60, 85, 0, 0);
+			autonStep++;
+			break;
+		case 16:
+			robotAction(Direction.FORWARD, 15, 55, 85, 0, 0);
+			autonStep++;
+			break;
+		case 17:
+			robotAction(Direction.CUBEACTION, 0, 0, 85, 100, 1);
+			autonStep++;
+			break;
+		case 18:
+			robotAction(Direction.REVERSE, 15, 55, 0, 0, 0);
+			autonStep++;
+			break;
+		}
 	}
 
 	private void startRightScaleLeftSwitchLeft() {
@@ -1074,7 +1310,7 @@ public class Robot extends IterativeRobot {
 	private void startRightScaleLeftSwitchRight() {
 	}
 
-	private void startRightScaleLeftVault() {
+	private void startRightScaleLeftNone() {
 		// TODO Auto-generated method stub
 
 	}
@@ -1223,7 +1459,7 @@ public class Robot extends IterativeRobot {
 		}
 	}
 
-	private void startRightScaleRightVault() {
+	private void startRightScaleRightNone() {
 		// TODO Auto-generated method stub
 
 	}
@@ -1243,7 +1479,7 @@ public class Robot extends IterativeRobot {
 
 	}
 
-	private void startRightSwitchLeftVault() {
+	private void startRightSwitchLeftNone() {
 		// TODO Auto-generated method stub
 
 	}
@@ -1267,6 +1503,10 @@ public class Robot extends IterativeRobot {
 			robotAction(Direction.FORWARD, 10, 100, 0, 0, 0);
 			autonStep++;
 			break;
+		case 4:
+			robotAction(Direction.CUBEACTION, 0, 0, 45, 100, 1);
+			autonStep++;
+			break;
 		case 5:
 			robotAction(Direction.REVERSE, 10, 100, 0, 0, 0);
 			autonStep++;
@@ -1285,6 +1525,10 @@ public class Robot extends IterativeRobot {
 			break;
 		case 9:
 			robotAction(Direction.FORWARD, 13, 60, 0, 0, 0);
+			autonStep++;
+			break;
+		case 10:
+			robotAction(Direction.CUBEACTION, 0, 0, 0, -100, 1);
 			autonStep++;
 			break;
 		case 11:
@@ -1307,6 +1551,7 @@ public class Robot extends IterativeRobot {
 			robotAction(Direction.FORWARD, 10, 60, 0, 0, 0);
 			autonStep++;
 			break;
+
 		}
 
 	}
@@ -1360,32 +1605,32 @@ public class Robot extends IterativeRobot {
 		}
 	}
 
-	private void startRightSwitchRightVault() {
+	private void startRightSwitchRightNone() {
 		// TODO Auto-generated method stub
 
 	}
 
-	private void startRightVaultScaleLeft() {
+	private void startRightNoneScaleLeft() {
 		// TODO Auto-generated method stub
 
 	}
 
-	private void startRightVaultScaleRight() {
+	private void startRightNoneScaleRight() {
 		// TODO Auto-generated method stub
 
 	}
 
-	private void startRightVaultSwitchLeft() {
+	private void startRightNoneSwitchLeft() {
 		// TODO Auto-generated method stub
 
 	}
 
-	private void startRightVaultSwitchRight() {
+	private void startRightNoneSwitchRight() {
 		// TODO Auto-generated method stub
 
 	}
 
-	private void startRightVaultVault() {
+	private void startRightNoneNone() {
 		// TODO Auto-generated method stub
 
 	}
@@ -1434,6 +1679,9 @@ public class Robot extends IterativeRobot {
 				// _lift.set(-.5);
 				// }
 				// }
+				// while (limitSwitchHigh.get()) {
+				// 	Timer.delay(13);
+				//}
 			}
 			break;
 		case REVERSE:
@@ -1621,8 +1869,8 @@ public class Robot extends IterativeRobot {
 								curPlay = AutonPlays.startLeft_ScaleLeft_SwitchRight;
 							}
 							break;
-						case Vault:
-							curPlay = AutonPlays.startLeft_ScaleLeft_Vault;
+						case None:
+							curPlay = AutonPlays.startLeft_ScaleLeft_None;
 							break;
 						}
 					}
@@ -1639,8 +1887,8 @@ public class Robot extends IterativeRobot {
 								curPlay = AutonPlays.startLeft_ScaleRight_SwitchRight;
 							}
 							break;
-						case Vault:
-							curPlay = AutonPlays.startLeft_ScaleRight_Vault;
+						case None:
+							curPlay = AutonPlays.startLeft_ScaleRight_None;
 							break;
 						}
 					}
@@ -1659,8 +1907,8 @@ public class Robot extends IterativeRobot {
 						case Switch:
 							curPlay = AutonPlays.startLeft_SwitchLeft_SwitchLeft;
 							break;
-						case Vault:
-							curPlay = AutonPlays.startLeft_SwitchLeft_Vault;
+						case None:
+							curPlay = AutonPlays.startLeft_SwitchLeft_None;
 							break;
 						}
 					}
@@ -1677,32 +1925,10 @@ public class Robot extends IterativeRobot {
 						case Switch:
 							curPlay = AutonPlays.startLeft_SwitchRight_SwitchRight;
 							break;
-						case Vault:
-							curPlay = AutonPlays.startLeft_SwitchRight_Vault;
+						case None:
+							curPlay = AutonPlays.startLeft_SwitchRight_None;
 							break;
 						}
-					}
-				}
-				// Start Left Vault
-				else if (firstTarget == target.Vault) {
-					switch (secondTarget) {
-					case Scale:
-						if (scalePosition == 'L') {
-							curPlay = AutonPlays.startLeft_Vault_ScaleLeft;
-						} else {
-							curPlay = AutonPlays.startLeft_Vault_ScaleRight;
-						}
-						break;
-					case Switch:
-						if (switchPosition == 'L') {
-							curPlay = AutonPlays.startLeft_Vault_SwitchLeft;
-						} else {
-							curPlay = AutonPlays.startLeft_Vault_SwitchRight;
-						}
-						break;
-					case Vault:
-						curPlay = AutonPlays.startLeft_Vault_Vault;
-						break;
 					}
 				}
 			}
@@ -1721,8 +1947,8 @@ public class Robot extends IterativeRobot {
 								curPlay = AutonPlays.startCenter_ScaleLeft_SwitchRight;
 							}
 							break;
-						case Vault:
-							curPlay = AutonPlays.startCenter_ScaleLeft_Vault;
+						case None:
+							curPlay = AutonPlays.startCenter_ScaleLeft_None;
 							break;
 						}
 					}
@@ -1739,8 +1965,8 @@ public class Robot extends IterativeRobot {
 								curPlay = AutonPlays.startCenter_ScaleRight_SwitchRight;
 							}
 							break;
-						case Vault:
-							curPlay = AutonPlays.startCenter_ScaleRight_Vault;
+						case None:
+							curPlay = AutonPlays.startCenter_ScaleRight_None;
 							break;
 						}
 					}
@@ -1759,8 +1985,8 @@ public class Robot extends IterativeRobot {
 						case Switch:
 							curPlay = AutonPlays.startCenter_SwitchLeft_SwitchLeft;
 							break;
-						case Vault:
-							curPlay = AutonPlays.startCenter_SwitchLeft_Vault;
+						case None:
+							curPlay = AutonPlays.startCenter_SwitchLeft_None;
 							break;
 						}
 					}
@@ -1777,32 +2003,10 @@ public class Robot extends IterativeRobot {
 						case Switch:
 							curPlay = AutonPlays.startCenter_SwitchRight_SwitchRight;
 							break;
-						case Vault:
-							curPlay = AutonPlays.startCenter_SwitchRight_Vault;
+						case None:
+							curPlay = AutonPlays.startCenter_SwitchRight_None;
 							break;
 						}
-					}
-				}
-				// Start Center Vault
-				else if (firstTarget == target.Vault) {
-					switch (secondTarget) {
-					case Scale:
-						if (scalePosition == 'L') {
-							curPlay = AutonPlays.startCenter_Vault_ScaleLeft;
-						} else {
-							curPlay = AutonPlays.startCenter_Vault_ScaleRight;
-						}
-						break;
-					case Switch:
-						if (switchPosition == 'L') {
-							curPlay = AutonPlays.startCenter_Vault_SwitchLeft;
-						} else {
-							curPlay = AutonPlays.startCenter_Vault_SwitchRight;
-						}
-						break;
-					case Vault:
-						curPlay = AutonPlays.startCenter_Vault_Vault;
-						break;
 					}
 				}
 			}
@@ -1821,8 +2025,8 @@ public class Robot extends IterativeRobot {
 								curPlay = AutonPlays.startRight_ScaleLeft_SwitchRight;
 							}
 							break;
-						case Vault:
-							curPlay = AutonPlays.startRight_ScaleLeft_Vault;
+						case None:
+							curPlay = AutonPlays.startRight_ScaleLeft_None;
 							break;
 						}
 					}
@@ -1839,8 +2043,8 @@ public class Robot extends IterativeRobot {
 								curPlay = AutonPlays.startRight_ScaleRight_SwitchRight;
 							}
 							break;
-						case Vault:
-							curPlay = AutonPlays.startRight_ScaleRight_Vault;
+						case None:
+							curPlay = AutonPlays.startRight_ScaleRight_None;
 							break;
 						}
 					}
@@ -1859,8 +2063,8 @@ public class Robot extends IterativeRobot {
 						case Switch:
 							curPlay = AutonPlays.startRight_SwitchLeft_SwitchLeft;
 							break;
-						case Vault:
-							curPlay = AutonPlays.startRight_SwitchLeft_Vault;
+						case None:
+							curPlay = AutonPlays.startRight_SwitchLeft_None;
 							break;
 						}
 					}
@@ -1877,32 +2081,10 @@ public class Robot extends IterativeRobot {
 						case Switch:
 							curPlay = AutonPlays.startRight_SwitchRight_SwitchRight;
 							break;
-						case Vault:
-							curPlay = AutonPlays.startRight_SwitchRight_Vault;
+						case None:
+							curPlay = AutonPlays.startRight_SwitchRight_None;
 							break;
 						}
-					}
-				}
-				// Start Right Vault
-				else if (firstTarget == target.Vault) {
-					switch (secondTarget) {
-					case Scale:
-						if (scalePosition == 'L') {
-							curPlay = AutonPlays.startRight_Vault_ScaleLeft;
-						} else {
-							curPlay = AutonPlays.startRight_Vault_ScaleRight;
-						}
-						break;
-					case Switch:
-						if (switchPosition == 'L') {
-							curPlay = AutonPlays.startRight_Vault_SwitchLeft;
-						} else {
-							curPlay = AutonPlays.startRight_Vault_SwitchRight;
-						}
-						break;
-					case Vault:
-						curPlay = AutonPlays.startRight_Vault_Vault;
-						break;
 					}
 				}
 			}
