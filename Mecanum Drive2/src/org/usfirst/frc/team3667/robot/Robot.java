@@ -1,28 +1,18 @@
 package org.usfirst.frc.team3667.robot;
 
-import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.DigitalOutput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
-import edu.wpi.first.wpilibj.drive.RobotDriveBase;
-import edu.wpi.first.wpilibj.drive.RobotDriveBase.MotorType;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-//import edu.wpi.first.wpilibj.SampleRobot;
-//import edu.wpi.first.wpilibj.Sendable;
-//import edu.wpi.first.wpilibj.SpeedController;
-//import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.VictorSP;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-//import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-//import com.ctre.CANTalon.TalonControlMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import edu.wpi.first.wpilibj.IterativeRobot;
 
@@ -136,6 +126,7 @@ public class Robot extends IterativeRobot {
 	Joystick _driveController = new Joystick(0);
 	Joystick _cubeController = new Joystick(1);
 	int counter = 0;
+	long quitinTime = System.currentTimeMillis();
 
 	double desiredCubeHeight = 0;
 
@@ -182,19 +173,21 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putData("First Target", firstTargetRadio);
 		// Second Target Selector.
 		secondTargetRadio = new SendableChooser<target>();
-		secondTargetRadio.addDefault("On Side Any", target.OnSideAny);
+		secondTargetRadio.addObject("On Side Any", target.OnSideAny);
 		secondTargetRadio.addObject("Scale", target.Scale);
 		secondTargetRadio.addObject("Switch", target.Switch);
-		secondTargetRadio.addObject("None", target.None);
+		secondTargetRadio.addDefault("None", target.None);
 		SmartDashboard.putData("Second Target", secondTargetRadio);
 
 		// compressor.setClosedLoopControl(true);
 	}
 
 	public void disabledInit() {
-		
+
 	}
-	
+    public void telopInit() {
+    	
+    }
 	// This function is called periodically during operator control
 	public void teleopPeriodic() {
 
@@ -954,30 +947,34 @@ public class Robot extends IterativeRobot {
 	private void startLeftScaleLeftNone() {
 		switch (autonStep) {
 		case 1:
-			robotAction(Direction.FORWARD, 260, 90, 0, 0, 0);
+			robotAction(Direction.FORWARD, 220, 80, 0, 0, 0);
 			autonStep++;
 			break;
 		case 2:
-			robotAction(Direction.CUBEACTION, 0, 0, 84, 100, 1);
+			robotAction(Direction.RIGHT, 35, 60, 0, 0, 0);
 			autonStep++;
 			break;
 		case 3:
-			robotAction(Direction.RIGHT, 90, 60, 84, 0, 0);
+			robotAction(Direction.FORWARD, 10, 60, 0, 0, 0);
 			autonStep++;
 			break;
 		case 4:
-			robotAction(Direction.FORWARD, 8, 40, 84, 0, 0);
+			robotAction(Direction.CUBEACTION, 0, 0, 84, 0, 1);
 			autonStep++;
 			break;
 		case 5:
-			robotAction(Direction.CUBEACTION, 0, 0, 84, 100, 1);
+			robotAction(Direction.FORWARD, 15, 50, 84, 0, 0);
 			autonStep++;
 			break;
 		case 6:
-			robotAction(Direction.REVERSE, 12, 40, 84, 0, 0);
+			robotAction(Direction.CUBEACTION, 0, 0, 84, 100, 1);
 			autonStep++;
 			break;
 		case 7:
+			robotAction(Direction.REVERSE, 15, 50, 84, 0, 0);
+			autonStep++;
+			break;
+		case 8:
 			robotAction(Direction.CUBEACTION, 0, 0, 0, 0, 1);
 			autonStep++;
 			break;
@@ -1624,30 +1621,34 @@ public class Robot extends IterativeRobot {
 	private void startRightScaleRightNone() {
 		switch (autonStep) {
 		case 1:
-			robotAction(Direction.FORWARD, 260, 90, 0, 0, 0);
+			robotAction(Direction.FORWARD, 220, 80, 0, 0, 0);
 			autonStep++;
 			break;
 		case 2:
-			robotAction(Direction.CUBEACTION, 0, 0, 84, 100, 1);
+			robotAction(Direction.LEFT, 35, 60, 0, 0, 0);
 			autonStep++;
 			break;
 		case 3:
-			robotAction(Direction.LEFT, 90, 60, 84, 0, 0);
+			robotAction(Direction.FORWARD, 10, 60, 0, 0, 0);
 			autonStep++;
 			break;
 		case 4:
-			robotAction(Direction.FORWARD, 8, 40, 84, 0, 0);
+			robotAction(Direction.CUBEACTION, 0, 0, 84, 0, 1);
 			autonStep++;
 			break;
 		case 5:
-			robotAction(Direction.CUBEACTION, 0, 0, 84, 100, 1);
+			robotAction(Direction.FORWARD, 15, 50, 84, 0, 0);
 			autonStep++;
 			break;
 		case 6:
-			robotAction(Direction.REVERSE, 12, 40, 84, 0, 0);
+			robotAction(Direction.CUBEACTION, 0, 0, 84, 100, 1);
 			autonStep++;
 			break;
 		case 7:
+			robotAction(Direction.REVERSE, 15, 50, 84, 0, 0);
+			autonStep++;
+			break;
+		case 8:
 			robotAction(Direction.CUBEACTION, 0, 0, 0, 0, 1);
 			autonStep++;
 			break;
@@ -1882,7 +1883,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 4:
-			robotAction(Direction.CUBEACTION, 0, 0, 48, -100, 1);
+			robotAction(Direction.CUBEACTION, 0, 0, 48, 100, 1);
 			autonStep++;
 			break;
 		case 5:
@@ -1892,25 +1893,46 @@ public class Robot extends IterativeRobot {
 		}
 	}
 
+	private Boolean adjustHeightPeriodic(double height) {
+		Boolean heightAttained = false;
+		if (height > 0 && !limitSwitchHigh.get()) {
+			_lift.set(1.0);
+			_lift2.set(1.0);
+		} else if (height <= 0 && !limitSwitchLow.get()) {
+			_lift.set(-1.0);
+			_lift2.set(-1.0);
+		} else {
+			_lift.set(0);
+			_lift2.set(0);
+			heightAttained = true;
+		}
+		return heightAttained;
+	}
+
 	private void robotAction(Direction driveDirection, double distance, double powerPercent, double height,
 			double cubeActionPercent, double minDuration) {
+		// Where are we starting from
 		double startingLeftEncoder = leftEncoder.getDistance();
 		double startingRightEncoder = rightEncoder.getDistance();
 		double turnDegree = 0;
 		double targetDegree = 0;
-		double currentCubeHeight = liftEncoder.getDistance();
-		desiredCubeHeight += height;
+		if (minDuration != 0) {
+			quitinTime = System.currentTimeMillis() + (long) (minDuration * 1000);
+		} else {
+			quitinTime = System.currentTimeMillis() + 7000;
+		}
+		boolean heightAttained = true;
 		switch (driveDirection) {
 		case CUBEACTION:
-			long quitinTime = System.currentTimeMillis() + (long) (minDuration * 1000);
 			while (System.currentTimeMillis() < quitinTime) {
 				adjustHeightPeriodic(height);
 				cubeActionPeriodic(cubeActionPercent);
 			}
 			break;
 		case FORWARD:
-			while (leftEncoder.getDistance() <= startingLeftEncoder + distance
-					&& rightEncoder.getDistance() <= startingRightEncoder + distance && distance > 0) {
+			while (leftEncoder.getDistance() <= (startingLeftEncoder + distance)
+					&& rightEncoder.getDistance() <= (startingRightEncoder + distance) && distance > 0
+					&& System.currentTimeMillis() < quitinTime) {
 				double correctionRotation = 0;
 				if (lastValidDirection - imu.getAngleZ() > 1) {
 					correctionRotation = 0.4;
@@ -1924,11 +1946,11 @@ public class Robot extends IterativeRobot {
 						&& rightEncoder.getDistance() >= startingRightEncoder + distance) {
 					_drive.arcadeDrive(powerPercent * -.01, correctionRotation);
 				}
-				// obtain the height encoder value here to determine if the
-				// height should change while driving
-				currentCubeHeight = liftEncoder.getDistance();
-				adjustHeightPeriodic(height);
+				heightAttained = adjustHeightPeriodic(height);
 				cubeActionPeriodic(cubeActionPercent);
+			}
+			while (!heightAttained && System.currentTimeMillis() < quitinTime) {
+				heightAttained = adjustHeightPeriodic(height);
 			}
 			break;
 		case REVERSE:
@@ -1939,17 +1961,21 @@ public class Robot extends IterativeRobot {
 				correctionRotation = 0.4;
 			}
 			while (leftEncoder.getDistance() >= startingLeftEncoder - distance
-					&& rightEncoder.getDistance() >= startingRightEncoder - distance && distance > 0) {
+					&& rightEncoder.getDistance() >= startingRightEncoder - distance && distance > 0 
+					&& System.currentTimeMillis() < quitinTime) {
 				_drive.arcadeDrive(powerPercent * -.01, correctionRotation);
-				adjustHeightPeriodic(height);
+				heightAttained = adjustHeightPeriodic(height);
 				cubeActionPeriodic(cubeActionPercent);
+			}
+			while (!heightAttained && System.currentTimeMillis() < quitinTime) {
+				heightAttained = adjustHeightPeriodic(height);
 			}
 			break;
 		case LEFT:
 			if (powerPercent > 85)
 				powerPercent = 85;
 			targetDegree = lastValidDirection - distance;
-			while (targetDegree < imu.getAngleZ()) {
+			while (targetDegree < imu.getAngleZ() && heightAttained && System.currentTimeMillis() < quitinTime) {
 				// check if within 10 degrees and if so slow turn
 				if (Math.abs(targetDegree - imu.getAngleZ()) > 10) {
 					SmartDashboard.putNumber("speed", powerPercent * -.01);
@@ -1957,7 +1983,7 @@ public class Robot extends IterativeRobot {
 				} else {
 					_drive.arcadeDrive(0, -.5);
 				}
-				adjustHeightPeriodic(height);
+				heightAttained = adjustHeightPeriodic(height);
 				cubeActionPeriodic(cubeActionPercent);
 			}
 			lastValidDirection -= distance;
@@ -1965,19 +1991,22 @@ public class Robot extends IterativeRobot {
 			while (lastValidDirection > imu.getAngleZ()) {
 				_drive.arcadeDrive(0, .5);
 			}
+			while (!heightAttained && System.currentTimeMillis() < quitinTime) {
+				heightAttained = adjustHeightPeriodic(height);
+			}
 			break;
 		case RIGHT:
 			if (powerPercent > 85)
 				powerPercent = 85;
 			turnDegree = lastValidDirection + distance;
-			while (turnDegree > imu.getAngleZ()) {
+			while (turnDegree > imu.getAngleZ() && heightAttained && System.currentTimeMillis() < quitinTime) {
 				// check if within 10 degrees and if so slow turn
 				if (Math.abs(turnDegree - imu.getAngleZ()) > 10) {
 					_drive.arcadeDrive(0, powerPercent * .01);
 				} else {
 					_drive.arcadeDrive(0, .5);
 				}
-				adjustHeightPeriodic(height);
+				heightAttained = adjustHeightPeriodic(height);
 				cubeActionPeriodic(cubeActionPercent);
 			}
 			lastValidDirection += distance;
@@ -1985,42 +2014,20 @@ public class Robot extends IterativeRobot {
 			while (lastValidDirection < imu.getAngleZ()) {
 				_drive.arcadeDrive(0, -.5);
 			}
+			while (!heightAttained && System.currentTimeMillis() < quitinTime) {
+				heightAttained = adjustHeightPeriodic(height);
+			}
 			break;
 		default:
 			break;
 		}
-		SmartDashboard.putNumber("target Degree", targetDegree);
-		SmartDashboard.putNumber("speed", powerPercent * .01);
+		_lift.set(0);
+		_lift2.set(0);
 	}
 
 	private void cubeActionPeriodic(double cubeActionPercent) {
 		_pickupLeft.set(cubeActionPercent / 100 * -1);
 		_pickupRight.set(cubeActionPercent / 100 * -1);
-	}
-
-	private void adjustHeightPeriodic(double height) {
-		if (height > 0) {
-			if (limitSwitchHigh.get()) {
-				_lift.set(1);
-				_lift2.set(1);
-			} else {
-				_lift.set(0);
-				_lift2.set(0);
-			}
-		}
-		else if (height < 0) {
-			if (limitSwitchLow.get()) {
-				_lift.set(-1);
-				_lift2.set(-1);
-			} else {
-				_lift.set(0);
-				_lift2.set(0);
-			}
-		}
-		else {
-			_lift.set(0);
-			_lift2.set(0);
-		}
 	}
 
 	private double getDegreeZ() {
@@ -2045,17 +2052,12 @@ public class Robot extends IterativeRobot {
 	private void updateSmartDashboardData() {
 		SmartDashboard.putNumber("encoderL", leftEncoder.getDistance());
 		SmartDashboard.putNumber("encoderR", rightEncoder.getDistance());
-		SmartDashboard.putBoolean("button1", _driveController.getRawButton(1));
-		SmartDashboard.putBoolean("button2", _driveController.getRawButton(2));
 		SmartDashboard.putNumber("IMU Angle Z", getDegreeZ());
 		SmartDashboard.putNumber("Gyro Angle Z", imu.getAngleZ());
 		SmartDashboard.putNumber("Last Valid", lastValidDirection);
 		SmartDashboard.putNumber("Auton Step", autonStep);
 		SmartDashboard.putNumber("Timer", Timer.getMatchTime());
-		SmartDashboard.putNumber("Test Encoder Distance Value", liftEncoder.getDistance());
-		SmartDashboard.putNumber("Test Encoder Rate Value", liftEncoder.getRate());
-		SmartDashboard.putNumber("Test Encoder Count", liftEncoder.get());
-		SmartDashboard.putNumber("Test Encoder Raw", liftEncoder.getRaw());
+		SmartDashboard.putNumber("Lift Encoder", liftEncoder.getDistance());
 		SmartDashboard.putString("FMS Data", gameData);
 		SmartDashboard.putString("Current Play:", curPlay.toString());
 	}
@@ -2126,6 +2128,8 @@ public class Robot extends IterativeRobot {
 						case None:
 							curPlay = AutonPlays.startLeft_ScaleLeft_None;
 							break;
+						default:
+							break;
 						}
 					}
 					// Start Left Scale Right
@@ -2143,6 +2147,8 @@ public class Robot extends IterativeRobot {
 							break;
 						case None:
 							curPlay = AutonPlays.startLeft_ScaleRight_None;
+							break;
+						default:
 							break;
 						}
 					}
@@ -2164,6 +2170,8 @@ public class Robot extends IterativeRobot {
 						case None:
 							curPlay = AutonPlays.startLeft_SwitchLeft_None;
 							break;
+						default:
+							break;
 						}
 					}
 					// Start Left Switch Right
@@ -2181,6 +2189,8 @@ public class Robot extends IterativeRobot {
 							break;
 						case None:
 							curPlay = AutonPlays.startLeft_SwitchRight_None;
+							break;
+						default:
 							break;
 						}
 					}
@@ -2220,6 +2230,8 @@ public class Robot extends IterativeRobot {
 						case None:
 							curPlay = AutonPlays.startCenter_ScaleLeft_None;
 							break;
+						default:
+							break;
 						}
 					}
 					// Start Center Scale Right
@@ -2237,6 +2249,8 @@ public class Robot extends IterativeRobot {
 							break;
 						case None:
 							curPlay = AutonPlays.startCenter_ScaleRight_None;
+							break;
+						default:
 							break;
 						}
 					}
@@ -2258,6 +2272,8 @@ public class Robot extends IterativeRobot {
 						case None:
 							curPlay = AutonPlays.startCenter_SwitchLeft_None;
 							break;
+						default:
+							break;
 						}
 					}
 					// Start Center Switch Right
@@ -2275,6 +2291,8 @@ public class Robot extends IterativeRobot {
 							break;
 						case None:
 							curPlay = AutonPlays.startCenter_SwitchRight_None;
+							break;
+						default:
 							break;
 						}
 					}
@@ -2314,6 +2332,8 @@ public class Robot extends IterativeRobot {
 						case None:
 							curPlay = AutonPlays.startRight_ScaleLeft_None;
 							break;
+						default:
+							break;
 						}
 					}
 					// Start Right Scale Right
@@ -2331,6 +2351,8 @@ public class Robot extends IterativeRobot {
 							break;
 						case None:
 							curPlay = AutonPlays.startRight_ScaleRight_None;
+							break;
+						default:
 							break;
 						}
 					}
@@ -2352,6 +2374,8 @@ public class Robot extends IterativeRobot {
 						case None:
 							curPlay = AutonPlays.startRight_SwitchLeft_None;
 							break;
+						default:
+							break;
 						}
 					}
 					// Start Right Switch Right
@@ -2369,6 +2393,8 @@ public class Robot extends IterativeRobot {
 							break;
 						case None:
 							curPlay = AutonPlays.startRight_SwitchRight_None;
+							break;
+						default:
 							break;
 						}
 					}
