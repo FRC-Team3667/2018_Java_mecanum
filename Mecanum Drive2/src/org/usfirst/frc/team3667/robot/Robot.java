@@ -17,14 +17,13 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import edu.wpi.first.wpilibj.IterativeRobot;
 
-import org.usfirst.frc.team3667.robot.Robot.cubePickup;
 import org.usfirst.frc.team3667.robot.Robot.startingPosition;
 import org.usfirst.frc.team3667.robot.Robot.target;
 
 import com.analog.adis16448.frc.ADIS16448_IMU;
 
 /**
- * The VM is configured to automatically run this class, and to call the
+ * ga The VM is configured to automatically run this class, and to call the
  * functions corresponding to each mode, as described in the IterativeRobot
  * documentation. If you change the name of this class or the package after
  * creating this project, you must also update the manifest file in the resource
@@ -34,7 +33,6 @@ public class Robot extends IterativeRobot {
 	ADIS16448_IMU imu;
 	SendableChooser<startingPosition> startingPositionRadio;
 	SendableChooser<target> firstTargetRadio;
-	SendableChooser<cubePickup> cubePickupRadio;
 	SendableChooser<target> secondTargetRadio;
 
 	String gameData = "";
@@ -87,11 +85,7 @@ public class Robot extends IterativeRobot {
 	}
 
 	public enum target {
-		Switch, Scale, OnSideAny, None
-	}
-
-	public enum cubePickup {
-		One, Two, Three, Four, Five, Six
+		Switch, Scale, OnSideAny, DriveForward, None
 	}
 
 	public static final double kDistancePerPulse = kDistancePerRevolution / kPulsesPerRevolution;
@@ -159,15 +153,16 @@ public class Robot extends IterativeRobot {
 		liftEncoder.setDistancePerPulse(kDistancePerPulse);
 		// Setup the menu for position selection.
 		startingPositionRadio = new SendableChooser<startingPosition>();
-		startingPositionRadio.addDefault("Left", startingPosition.Left);
-		startingPositionRadio.addObject("Center", startingPosition.Center);
+		startingPositionRadio.addObject("Left", startingPosition.Left);
+		startingPositionRadio.addDefault("Center", startingPosition.Center);
 		startingPositionRadio.addObject("Right", startingPosition.Right);
 		SmartDashboard.putData("Starting Position", startingPositionRadio);
 		// First Target Selector.
 		firstTargetRadio = new SendableChooser<target>();
-		firstTargetRadio.addDefault("On Side Any", target.OnSideAny);
+		firstTargetRadio.addObject("On Side Any", target.OnSideAny);
 		firstTargetRadio.addObject("Scale", target.Scale);
-		firstTargetRadio.addObject("Switch", target.Switch);
+		firstTargetRadio.addDefault("Switch", target.Switch);
+		firstTargetRadio.addDefault("Drive Forward", target.DriveForward);
 		SmartDashboard.putData("First Target", firstTargetRadio);
 		// Second Target Selector.
 		secondTargetRadio = new SendableChooser<target>();
@@ -176,8 +171,8 @@ public class Robot extends IterativeRobot {
 		secondTargetRadio.addObject("Switch", target.Switch);
 		secondTargetRadio.addDefault("None", target.None);
 		SmartDashboard.putData("Second Target", secondTargetRadio);
-		
-		CameraServer.getInstance().startAutomaticCapture();
+
+		// CameraServer.getInstance().startAutomaticCapture();
 	}
 
 	public void disabledInit() {
@@ -208,25 +203,26 @@ public class Robot extends IterativeRobot {
 		// Logic for Cube Pickup and Release
 		if (_cubeController.getRawButton(5)) {
 			_pickupLeft.set(1);
-			_pickupRight.set(1);
+			_pickupRight.set(-1);
 		} else if (_cubeController.getRawButton(6)) {
 			_pickupLeft.set(-1);
-			_pickupRight.set(-1);
+			_pickupRight.set(1);
 		} else if (_cubeController.getRawAxis(2) != 0) {
-			_pickupLeft.set(_cubeController.getRawAxis(2));
-			_pickupRight.set(_cubeController.getRawAxis(2));
+			_pickupLeft.set(_cubeController.getRawAxis(7));
+			_pickupRight.set(_cubeController.getRawAxis(7) * -1.0);
 		} else {
-			_pickupLeft.set(_cubeController.getRawAxis(3) * -1.0);
-			_pickupRight.set(_cubeController.getRawAxis(3) * -1.0);
+			_pickupLeft.set(_cubeController.getRawAxis(8) * -1.0);
+			_pickupRight.set(_cubeController.getRawAxis(8));
 		}
 
 		// Logic to Lift and Lower
-		if (_cubeController.getRawAxis(1) > 0 && !limitSwitchHigh.get()) {
-			_lift.set(_cubeController.getRawAxis(1));
-			_lift2.set(_cubeController.getRawAxis(1));
-		} else if (_cubeController.getRawAxis(1) < 0 && !limitSwitchLow.get()) {
-			_lift.set(_cubeController.getRawAxis(1));
-			_lift2.set(_cubeController.getRawAxis(1));
+		double curLiftVal = _cubeController.getRawAxis(1) * -1.0;
+		if (curLiftVal > .2 && !limitSwitchHigh.get()) {
+			_lift.set(curLiftVal);
+			_lift2.set(curLiftVal);
+		} else if (curLiftVal < .2 && !limitSwitchLow.get()) {
+			_lift.set(curLiftVal);
+			_lift2.set(curLiftVal);
 		} else {
 			_lift.set(0);
 			_lift2.set(0);
@@ -234,7 +230,7 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("Cube Controller", _cubeController.getRawAxis(1));
 
 		// Logic for Cube Tilt
-		_pickupTilt.set(_cubeController.getRawAxis(5));
+		_pickupTilt.set(_cubeController.getRawAxis(3)); // was 5
 		SmartDashboard.putNumber("Pickup Tilt", _cubeController.getRawAxis(5));
 
 		// Logic to drive or "Step Test" Auton
@@ -242,7 +238,13 @@ public class Robot extends IterativeRobot {
 			testAutonomousPeriodic(); // When the yellow "Y" button is pressed
 		} else {
 			// Basic logic to drive the robot
-			_drive.arcadeDrive(_driveController.getRawAxis(1) * -1, _driveController.getRawAxis(4));
+			if (!limitSwitchLow.get()) {
+				// Slow the robot down when not at low position on lift
+				_drive.arcadeDrive(_driveController.getRawAxis(1) * -0.6, _driveController.getRawAxis(4) * 0.6);
+			} else {
+				// Full speed robot drive
+				_drive.arcadeDrive(_driveController.getRawAxis(1) * -1, _driveController.getRawAxis(4));
+			}
 		}
 
 		// Logic to reset sensor for auton testing
@@ -266,7 +268,7 @@ public class Robot extends IterativeRobot {
 		lastValidDirection = 0;
 		// Get FMS Data to determine ownership sides.
 		int retries = 50;
-		while (gameData.length() != 3 && retries > 0) {
+		while (gameData.length() < 3 && retries > 0) {
 			SmartDashboard.putString("Current Play:", gameData);
 			try {
 				Thread.sleep(5);
@@ -426,26 +428,30 @@ public class Robot extends IterativeRobot {
 	}
 
 	private void cubeActionPeriodic(double cubeActionPercent) {
-		_pickupLeft.set(cubeActionPercent / 100 * -1);
+		_pickupLeft.set(cubeActionPercent / 100 * 1);
 		_pickupRight.set(cubeActionPercent / 100 * -1);
 	}
 
 	private void updateSmartDashboardData() {
-		SmartDashboard.putNumber("encoderL", leftEncoder.getDistance());
-		SmartDashboard.putNumber("encoderR", rightEncoder.getDistance());
-		SmartDashboard.putNumber("Gyro Angle Z", imu.getAngleZ());
-		SmartDashboard.putNumber("Last Valid", lastValidDirection);
-		SmartDashboard.putNumber("Auton Step", autonStep);
-		SmartDashboard.putNumber("Timer", Timer.getMatchTime());
-		SmartDashboard.putNumber("Lift Encoder", liftEncoder.getDistance());
-		SmartDashboard.putString("FMS Data", gameData);
-		SmartDashboard.putString("Current Play:", curPlay.toString());
+		try {
+			SmartDashboard.putNumber("encoderL", leftEncoder.getDistance());
+			SmartDashboard.putNumber("encoderR", rightEncoder.getDistance());
+			SmartDashboard.putNumber("Gyro Angle Z", imu.getAngleZ());
+			SmartDashboard.putNumber("Last Valid", lastValidDirection);
+			SmartDashboard.putNumber("Auton Step", autonStep);
+			SmartDashboard.putNumber("Timer", Timer.getMatchTime());
+			SmartDashboard.putNumber("Lift Encoder", liftEncoder.getDistance());
+			SmartDashboard.putString("FMS Data", gameData);
+			SmartDashboard.putString("Current Play:", curPlay.toString());
+		} catch (Exception exc) {
+
+		}
 	}
 
 	private void driveForwardOnly() {
 		switch (autonStep) {
 		case 1:
-			robotAction(Direction.FORWARD, 150, 50, 0, 0, 0);
+			robotAction(Direction.FORWARD, 140, 50, 0, 0, 0);
 			autonStep++;
 			break;
 		}
@@ -462,7 +468,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 3:
-			robotAction(Direction.FORWARD, 70, 75, 0, 0, 0);
+			robotAction(Direction.FORWARD, 50, 75, 0, 0, 0);
 			autonStep++;
 			break;
 		case 4:
@@ -470,7 +476,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 5:
-			robotAction(Direction.FORWARD, 10, 60, 48, 0, 0);
+			robotAction(Direction.FORWARD, 16, 60, 48, 0, 0);
 			autonStep++;
 			break;
 		case 6:
@@ -491,7 +497,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 3:
-			robotAction(Direction.FORWARD, 70, 70, 0, 0, 0);
+			robotAction(Direction.FORWARD, 50, 70, 0, 0, 0);
 			autonStep++;
 			break;
 		case 4:
@@ -499,7 +505,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 5:
-			robotAction(Direction.FORWARD, 10, 60, 48, 0, 0);
+			robotAction(Direction.FORWARD, 16, 60, 48, 0, 0);
 			autonStep++;
 			break;
 		case 6:
@@ -793,11 +799,15 @@ public class Robot extends IterativeRobot {
 	}
 
 	private AutonPlays determinePlay() {
-		startingPosition startPosition = (startingPosition) startingPositionRadio.getSelected();
-		target firstTarget = (target) firstTargetRadio.getSelected();
-		// cubePickup cubePickup = (cubePickup) cubePickupRadio.getSelected();
-		target secondTarget = (target) secondTargetRadio.getSelected();
-		// Check the gamedata to see what we are looking at
+		startingPosition startPosition = startingPosition.Center;
+		target firstTarget = target.Switch;
+		target secondTarget = target.None;
+		try {
+			startPosition = (startingPosition) startingPositionRadio.getSelected();
+			firstTarget = (target) firstTargetRadio.getSelected();
+			secondTarget = (target) secondTargetRadio.getSelected();
+		} catch (Exception exc) {
+		}
 		char switchPosition = ' ';
 		char scalePosition = ' ';
 		try {
@@ -826,7 +836,10 @@ public class Robot extends IterativeRobot {
 		if (gameData.length() > 0) {
 			// All Start Left Logic
 			if (startPosition == startingPosition.Left) {
-				if (firstTarget == target.OnSideAny) {
+				if (firstTarget == target.DriveForward) {
+					curPlay = AutonPlays.driveForwardOnly;
+				}
+				else if (firstTarget == target.OnSideAny) {
 					if (secondTarget == target.None) {
 						if (switchPosition == 'L') {
 							curPlay = AutonPlays.startLeft_SwitchLeft_None;
@@ -928,7 +941,10 @@ public class Robot extends IterativeRobot {
 			}
 			// All Start Center Logic
 			else if (startPosition == startingPosition.Center) {
-				if (firstTarget == target.OnSideAny) {
+				if (firstTarget == target.DriveForward) {
+					curPlay = AutonPlays.driveForwardOnly;
+				}
+				else if (firstTarget == target.OnSideAny) {
 					if (secondTarget == target.None) {
 						if (switchPosition == 'L') {
 							curPlay = AutonPlays.startCenter_SwitchLeft_None;
@@ -1030,7 +1046,10 @@ public class Robot extends IterativeRobot {
 			}
 			// All Start Right Logic
 			else if (startPosition == startingPosition.Right) {
-				if (firstTarget == target.OnSideAny) {
+				if (firstTarget == target.DriveForward) {
+					curPlay = AutonPlays.driveForwardOnly;
+				}
+				else if (firstTarget == target.OnSideAny) {
 					if (secondTarget == target.None) {
 						if (switchPosition == 'R') {
 							curPlay = AutonPlays.startRight_SwitchRight_None;
@@ -1132,6 +1151,7 @@ public class Robot extends IterativeRobot {
 				}
 			}
 		}
+		// curPlay = AutonPlays.driveForwardOnly;
 		return curPlay;
 	}
 
