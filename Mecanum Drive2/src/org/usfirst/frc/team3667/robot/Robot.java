@@ -510,6 +510,14 @@ public class Robot extends IterativeRobot {
 			robotAction(Direction.CUBEACTION, 0, 0, 48, 100, 1);
 			autonStep++;
 			break;
+		case 7:
+			robotAction(Direction.REVERSE, 48, 60, 0, 0, 0);
+			autonStep++;
+			break;
+		case 8:
+			robotAction(Direction.RIGHT, 45, 60, 0, 0, 0);
+			autonStep++;
+			break;
 		}
 	}
 
@@ -537,6 +545,14 @@ public class Robot extends IterativeRobot {
 			break;
 		case 6:
 			robotAction(Direction.CUBEACTION, 0, 0, 48, 100, 1);
+			autonStep++;
+			break;
+		case 7:
+			robotAction(Direction.REVERSE, 48, 60, 0, 0, 0);
+			autonStep++;
+			break;
+		case 8:
+			robotAction(Direction.LEFT, 45, 60, 0, 0, 0);
 			autonStep++;
 			break;
 		}
@@ -1145,7 +1161,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 8:
-			robotAction(Direction.LEFT, 90, 60, 0, 0, 0);
+			robotAction(Direction.LEFT, 95, 60, 0, 0, 0);
 			autonStep++;
 			break;
 		case 9:
@@ -1176,7 +1192,45 @@ public class Robot extends IterativeRobot {
 	}
 
 	private void startLeftSwitchRightNone() {
-		// TODO write these methods!
+		switch (autonStep)
+		{
+			case 1:
+				robotAction(Direction.FORWARD, 10, 60, 0, 0, 0);
+				autonStep++;
+				break;
+			case 2:
+				robotAction(Direction.LEFT, 5, 60, 0, 0, 0);
+				autonStep++;
+				break;
+			case 3:
+				robotAction(Direction.FORWARD, 140, 80, 0, 0, 0);
+				autonStep++;
+				break;
+			case 4:
+				robotAction(Direction.FORWARD, 60, 60, 0, 0, 0);
+				autonStep++;
+				break;
+			case 5:
+				robotAction(Direction.RIGHT, 90, 60, 0, 0, 0);
+				autonStep++;
+				break;
+			case 6:
+				robotAction(Direction.FORWARD, 175, 75, 0, 0, 0);
+				autonStep++;
+				break;
+			case 7:
+				robotAction(Direction.RIGHT, 105, 60, 0, 0, 0);
+				autonStep++; // no more eleven skipping :(
+				break;
+			case 8:
+				robotAction(Direction.FORWARD, 5, 55, 48, 0, 1.5);
+				autonStep++;
+				break;
+			case 9:
+				robotAction(Direction.CUBEACTION, 0, 0, 48, 100, 1);
+				autonStep++;
+				break;
+		}
 	}
 
 	private void startRightScaleLeftNone() {
@@ -1239,60 +1293,45 @@ public class Robot extends IterativeRobot {
 			break;
 		}
 	}
-
-	// TODO Fix this
+	
 	private void startRightSwitchLeftNone() {
 		switch (autonStep) {
 		case 1:
-			robotAction(Direction.RIGHT, 5, 60, 0, 0, 0);
+			robotAction(Direction.FORWARD, 10, 60, 0, 0, 0);
 			autonStep++;
 			break;
 		case 2:
-			robotAction(Direction.FORWARD, 150, 80, 0, 0, 0);
+			robotAction(Direction.RIGHT, 5, 60, 0, 0, 0);
 			autonStep++;
 			break;
 		case 3:
-			robotAction(Direction.FORWARD, 40, 60, 0, 0, 0);
+			robotAction(Direction.FORWARD, 140, 80, 0, 0, 0);
 			autonStep++;
 			break;
 		case 4:
-			robotAction(Direction.LEFT, 95, 60, 0, 0, 0);
+			robotAction(Direction.FORWARD, 60, 60, 0, 0, 0);
 			autonStep++;
 			break;
 		case 5:
-			robotAction(Direction.FORWARD, 200, 75, 0, 0, 0);
-			autonStep++;
-			break;
-		//case 6:
-			//robotAction(Direction.)
-		case 6:
-			robotAction(Direction.FORWARD, 5, 60, 0, 0, 0);
-			autonStep++;
-			break;
-		case 7:
-			robotAction(Direction.REVERSE, 10, 60, 0, 0, 0);
-			autonStep++;
-			break;
-		case 8:
 			robotAction(Direction.LEFT, 90, 60, 0, 0, 0);
 			autonStep++;
 			break;
+		case 6:
+			robotAction(Direction.FORWARD, 175, 75, 0, 0, 0);
+			autonStep++;
+			break;
+		case 7:
+			robotAction(Direction.LEFT, 105, 60, 0, 0, 0);
+			autonStep++; // elevenSkipping = null;
+			break;
+		case 8:
+			robotAction(Direction.FORWARD, 5, 55, 48, 0, 1.5);
+			autonStep++;
+			break;
 		case 9:
-			//robotAction(Direction.FORWARD, 16, 60, 0, 0, 0);
+			robotAction(Direction.CUBEACTION, 0, 0, 48, 100, 1);
 			autonStep++;
 			break;
-		case 10:
-			//robotAction(Direction.RIGHT, 180, 60, 0, 0, 0);
-			autonStep++;
-			break;
-		case 11:
-			robotAction(Direction.CUBEACTION, 0, 0, 48, 0, 1);
-			autonStep++;
-			break;
-		case 12:
-			robotAction(Direction.CUBEACTION, 0, 0, 0, 100, 1);
-			autonStep++;
-			break;
+		}
 	}
-}
 }
