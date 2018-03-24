@@ -1,8 +1,9 @@
 package org.usfirst.frc.team3667.robot;
 
+import edu.wpi.cscore.UsbCamera;
 //import edu.wpi.cscore.CvSource;
-//import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.CameraServer;
 //import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -40,6 +41,7 @@ public class Robot extends IterativeRobot {
 	// SendableChooser<target> secondTargetRadio;
 
 	String gameData = "";
+	private UsbCamera camera;
 
 	public static final double kDistancePerRevolution = 18.84;
 	Command autonomousCommand;
@@ -177,19 +179,7 @@ public class Robot extends IterativeRobot {
 		// secondTargetRadio.addDefault("None", target.None);
 		// SmartDashboard.putData("Second Target", secondTargetRadio);
 
-		/*
-		 * UsbCamera camera =
-		 * CameraServer.getInstance().startAutomaticCapture();
-		 * camera.setResolution(640, 480); CvSink cvsink =
-		 * CameraServer.getInstance().getVideo(); CvSource outputStream =
-		 * CameraServer.getInstance().putVideo("Blur", 640, 480); Mat source =
-		 * new Mat(); Mat output = new Mat(); while(!Thread.interrupted()) {
-		 * cvSink.grabFrame(source); Imgproc.cvtColor(source, output,
-		 * Imgproc.COLOR_BayerBG2BGR); outputStream.putFrame(output); }
-		 */
-
-		// CameraServer.getInstance().startAutomaticCapture();
-
+		camera = CameraServer.getInstance().startAutomaticCapture(0);
 	}
 
 	public void disabledInit() {
