@@ -203,6 +203,9 @@ public class Robot extends IterativeRobot {
 	// This function is called periodically during operator control
 	public void teleopPeriodic() {
 
+		// Slow down turns
+		
+
 		// Update the Smart Dashboard Data
 		updateSmartDashboardData();
 
@@ -225,11 +228,11 @@ public class Robot extends IterativeRobot {
 			_pickupLeft.set(-1);
 			_pickupRight.set(1);
 		} else if (_cubeController.getRawAxis(2) != 0) {
-			_pickupLeft.set(_cubeController.getRawAxis(7));
-			_pickupRight.set(_cubeController.getRawAxis(7) * -1.0);
+			_pickupLeft.set(_cubeController.getRawAxis(2)); //7
+			_pickupRight.set(_cubeController.getRawAxis(2) * -1.0); //7
 		} else {
-			_pickupLeft.set(_cubeController.getRawAxis(8) * -1.0);
-			_pickupRight.set(_cubeController.getRawAxis(8));
+			_pickupLeft.set(_cubeController.getRawAxis(3) * -1.0); //8
+			_pickupRight.set(_cubeController.getRawAxis(3)); //8
 		}
 
 		// Logic to Lift and Lower
@@ -257,10 +260,10 @@ public class Robot extends IterativeRobot {
 			// Basic logic to drive the robot
 			if (!limitSwitchLow.get()) {
 				// Slow the robot down when not at low position on lift
-				_drive.arcadeDrive(_driveController.getRawAxis(1) * -0.6, _driveController.getRawAxis(4) * 0.6);
+				_drive.arcadeDrive(_driveController.getRawAxis(1) * -0.75, _driveController.getRawAxis(4) * 0.75);
 			} else {
 				// FULL SPEED!!! robot drive (not quite hyper speed though)
-				_drive.arcadeDrive(_driveController.getRawAxis(1) * -1, _driveController.getRawAxis(4));
+				_drive.arcadeDrive(_driveController.getRawAxis(1) * -1, _driveController.getRawAxis(4) * 0.75);
 			}
 		}
 
@@ -625,7 +628,7 @@ public class Robot extends IterativeRobot {
 	// Compendium pages (plays) have now been subjected to the power of CODE
 	// CLEANUP!
 	// Notice how much we reduced our plays... so clean!
-	
+
 	private void startLeftScaleRight() {
 		switch (autonStep) {
 		case 1:
@@ -649,11 +652,11 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 6:
-			robotAction(Direction.FORWARD, 185, 75, 0, 0, 0);
+			robotAction(Direction.FORWARD, 190, 75, 0, 0, 0);
 			autonStep++;
 			break;
 		case 7:
-			robotAction(Direction.LEFT, 95, 60, 0, 0, 0);
+			robotAction(Direction.LEFT, 100, 60, 0, 0, 0);
 			autonStep++;
 			break;
 		case 8:
@@ -661,7 +664,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 9:
-			robotAction(Direction.FORWARD, 20, 55, 85, 0, 0);
+			robotAction(Direction.FORWARD, 24, 55, 85, 0, 0);
 			autonStep++;
 			break;
 		case 10:
@@ -707,7 +710,7 @@ public class Robot extends IterativeRobot {
 			break;
 		case 7:
 			robotAction(Direction.RIGHT, 105, 60, 0, 0, 0);
-			autonStep++; 
+			autonStep++;
 			break;
 		case 8:
 			robotAction(Direction.FORWARD, 5, 55, 48, 0, 1.5);
@@ -743,11 +746,11 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 6:
-			robotAction(Direction.FORWARD, 185, 75, 0, 0, 0);
+			robotAction(Direction.FORWARD, 190, 75, 0, 0, 0);
 			autonStep++;
 			break;
 		case 7:
-			robotAction(Direction.RIGHT, 90, 60, 0, 0, 0);
+			robotAction(Direction.RIGHT, 100, 60, 0, 0, 0);
 			autonStep++;
 			break;
 		case 8:
@@ -755,7 +758,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 9:
-			robotAction(Direction.FORWARD, 20, 55, 85, 0, 0);
+			robotAction(Direction.FORWARD, 24, 55, 85, 0, 0);
 			autonStep++;
 			break;
 		case 10:
@@ -916,7 +919,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 5:
-			robotAction(Direction.FORWARD, 15, 50, 84, 0, 0);
+			robotAction(Direction.FORWARD, 22, 50, 84, 0, 0);
 			autonStep++;
 			break;
 		case 6:
@@ -924,7 +927,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 7:
-			robotAction(Direction.REVERSE, 15, 50, 84, 0, 0);
+			robotAction(Direction.REVERSE, 22, 50, 84, 0, 0);
 			autonStep++;
 			break;
 		case 8:
@@ -949,22 +952,26 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 4:
-			robotAction(Direction.CUBEACTION, 0, 0, 48, 100, 1);
+			robotAction(Direction.FORWARD, 5, 60, 48, 0, 0);
 			autonStep++;
 			break;
 		case 5:
-			robotAction(Direction.CUBEACTION, 0, 0, 0, 0, 2);
+			robotAction(Direction.CUBEACTION, 0, 0, 48, 100, 1);
 			autonStep++;
 			break;
 		case 6:
-			robotAction(Direction.LEFT, 90, 60, 0, 0, 0);
+			robotAction(Direction.CUBEACTION, 0, 0, 0, 0, 2);
 			autonStep++;
 			break;
 		case 7:
-			robotAction(Direction.FORWARD, 60, 60, 0, 0, 0);
+			robotAction(Direction.LEFT, 90, 60, 0, 0, 0);
 			autonStep++;
 			break;
 		case 8:
+			robotAction(Direction.FORWARD, 60, 60, 0, 0, 0);
+			autonStep++;
+			break;
+		case 9:
 			robotAction(Direction.RIGHT, 135, 60, 0, 0, 0);
 			autonStep++;
 			break;
@@ -990,7 +997,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 5:
-			robotAction(Direction.FORWARD, 15, 50, 84, 0, 0);
+			robotAction(Direction.FORWARD, 22, 50, 84, 0, 0);
 			autonStep++;
 			break;
 		case 6:
@@ -998,7 +1005,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 7:
-			robotAction(Direction.REVERSE, 15, 50, 84, 0, 0);
+			robotAction(Direction.REVERSE, 22, 50, 84, 0, 0);
 			autonStep++;
 			break;
 		case 8:
@@ -1023,22 +1030,26 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 4:
-			robotAction(Direction.CUBEACTION, 0, 0, 48, 100, 1);
+			robotAction(Direction.FORWARD, 5, 0, 48, 0, 0);
 			autonStep++;
 			break;
 		case 5:
-			robotAction(Direction.CUBEACTION, 0, 0, 0, 0, 2);
+			robotAction(Direction.CUBEACTION, 0, 0, 48, 100, 1);
 			autonStep++;
 			break;
 		case 6:
-			robotAction(Direction.RIGHT, 90, 60, 0, 0, 0);
+			robotAction(Direction.CUBEACTION, 0, 0, 0, 0, 2);
 			autonStep++;
 			break;
 		case 7:
-			robotAction(Direction.FORWARD, 60, 60, 0, 0, 0);
+			robotAction(Direction.RIGHT, 90, 60, 0, 0, 0);
 			autonStep++;
 			break;
 		case 8:
+			robotAction(Direction.FORWARD, 60, 60, 0, 0, 0);
+			autonStep++;
+			break;
+		case 9:
 			robotAction(Direction.LEFT, 135, 60, 0, 0, 0);
 			autonStep++;
 			break;
