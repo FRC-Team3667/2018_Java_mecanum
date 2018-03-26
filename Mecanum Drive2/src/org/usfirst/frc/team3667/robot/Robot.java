@@ -98,6 +98,7 @@ public class Robot extends IterativeRobot {
 	private DigitalInput limitSwitchHigh = new DigitalInput(6);
 	private DigitalInput limitSwitchLow = new DigitalInput(7);
 	DoubleSolenoid climbShifter = new DoubleSolenoid(0, 1);
+	DoubleSolenoid pneuTilt = new DoubleSolenoid(2, 3);
 	VictorSP _pickupTilt = new VictorSP(1);
 
 	// Encoder Values for 17.
@@ -194,21 +195,27 @@ public class Robot extends IterativeRobot {
 	public void teleopPeriodic() {
 
 		// Slow down turns
-		
 
 		// Update the Smart Dashboard Data
 		updateSmartDashboardData();
 
 		// Logic to control the Shifting Solenoid to Low Gear
-		if (_cubeController.getRawButton(1)) {
-			// climbShifter.set(DoubleSolenoid.Value.kOff);
+		if (_driveController.getRawButton(1)) {
 			climbShifter.set(DoubleSolenoid.Value.kForward);
 		}
-
 		// Logic to control the Shifting Solenoid to High Gear
-		if (_cubeController.getRawButton(2)) {
+		if (_driveController.getRawButton(2)) {
 			climbShifter.set(DoubleSolenoid.Value.kReverse);
 		}
+
+//		// Logic to control the Pneumatic Tilt Solenoid to Up
+//		if (_cubeController.getRawAxis(5) > 0.25) {
+//			pneuTilt.set(DoubleSolenoid.Value.kForward);
+//		}
+//		// Logic to control the Pneumatic Tilt Solenoid to Down
+//		if (_cubeController.getRawAxis(5) < -0.25) {
+//			pneuTilt.set(DoubleSolenoid.Value.kReverse);
+//		}
 
 		// Logic for Cube Pickup and Release
 		if (_cubeController.getRawButton(5)) {
@@ -218,11 +225,11 @@ public class Robot extends IterativeRobot {
 			_pickupLeft.set(-1);
 			_pickupRight.set(1);
 		} else if (_cubeController.getRawAxis(2) != 0) {
-			_pickupLeft.set(_cubeController.getRawAxis(2)); //7
-			_pickupRight.set(_cubeController.getRawAxis(2) * -1.0); //7
+			_pickupLeft.set(_cubeController.getRawAxis(2)); // 7
+			_pickupRight.set(_cubeController.getRawAxis(2) * -1.0); // 7
 		} else {
-			_pickupLeft.set(_cubeController.getRawAxis(3) * -1.0); //8
-			_pickupRight.set(_cubeController.getRawAxis(3)); //8
+			_pickupLeft.set(_cubeController.getRawAxis(3) * -1.0); // 8
+			_pickupRight.set(_cubeController.getRawAxis(3)); // 8
 		}
 
 		// Logic to Lift and Lower
@@ -512,11 +519,27 @@ public class Robot extends IterativeRobot {
 	private AutonPlays determinePlay() {
 		startingPosition startPosition = startingPosition.Center;
 		target primaryTarget = target.Switch;
+		int autonSwitchThreshold = 2000;
 		// target secondTarget = target.None;
 		try {
-			startPosition = (startingPosition) startingPositionRadio.getSelected();
-			primaryTarget = (target) primaryTargetRadio.getSelected();
-			// secondTarget = (target) secondTargetRadio.getSelected();
+			// Determine starting position using switches
+			if ((auto1.getValue() > autonSwitchThreshold && auto2.getValue() > autonSwitchThreshold)
+					|| (auto1.getValue() < autonSwitchThreshold && auto2.getValue() < autonSwitchThreshold)) {
+				startPosition = startingPosition.Center;
+			} else if (auto1.getValue() > autonSwitchThreshold && auto2.getValue() < autonSwitchThreshold) {
+				startPosition = startingPosition.Left;
+			} else if (auto1.getValue() < autonSwitchThreshold && auto2.getValue() > autonSwitchThreshold) {
+				startPosition = startingPosition.Right;
+			}
+			if (auto3.getValue() > autonSwitchThreshold && auto4.getValue() > autonSwitchThreshold) {
+				primaryTarget = target.None;
+			} else if (auto3.getValue() < autonSwitchThreshold && auto4.getValue() < autonSwitchThreshold) {
+				primaryTarget = target.OnSideAny;
+			} else if (auto3.getValue() > autonSwitchThreshold && auto4.getValue() < autonSwitchThreshold) {
+				primaryTarget = target.Scale;
+			} else if (auto3.getValue() < autonSwitchThreshold && auto4.getValue() > autonSwitchThreshold) {
+				primaryTarget = target.Switch;
+			}
 		} catch (Exception exc) {
 		}
 		char switchPosition = ' ';
