@@ -155,6 +155,7 @@ public class Robot extends IterativeRobot {
 		leftEncoder.setDistancePerPulse(kDistancePerPulse);
 		rightEncoder.setDistancePerPulse(kDistancePerPulse);
 		liftEncoder.setDistancePerPulse(kDistancePerPulse);
+		pneuTilt.set(DoubleSolenoid.Value.kForward);
 		camera = CameraServer.getInstance().startAutomaticCapture(0);
 	}
 
@@ -180,11 +181,12 @@ public class Robot extends IterativeRobot {
 			climbShifter.set(DoubleSolenoid.Value.kReverse);
 		}
 
-		// Logic to control the Pneumatic Tilt Solenoid to Up
+		// When the button controlling this is not pressed, the cube-grabbing mechanism is tilted up
+		// If it is not, the mechanism will remain at its lowest point.
 		if (_driveController.getRawButton(6)) {
-			pneuTilt.set(DoubleSolenoid.Value.kForward);
-		} else {
 			pneuTilt.set(DoubleSolenoid.Value.kReverse);
+		} else {
+			pneuTilt.set(DoubleSolenoid.Value.kForward);
 		}
 
 		// Logic for Cube Pickup and Release
@@ -547,8 +549,8 @@ public class Robot extends IterativeRobot {
 					if (scalePosition == 'L') {
 						curPlay = AutonPlays.startLeft_ScaleLeft;
 					}
-					if (switchPosition == 'R') {
-						curPlay = AutonPlays.startLeft_SwitchRight;
+					if (switchPosition == 'R' && scalePosition == 'R') {
+						curPlay = AutonPlays.driveForwardOnly;
 					}
 				}
 				if (primaryTarget == target.Scale) {
@@ -578,14 +580,14 @@ public class Robot extends IterativeRobot {
 			}
 			if (startPosition == startingPosition.Right) {
 				if (primaryTarget == target.OnSideAny) {
-					if (switchPosition == 'L') {
-						curPlay = AutonPlays.startRight_SwitchLeft;
-					}
-					if (scalePosition == 'L') {
-						curPlay = AutonPlays.startRight_ScaleLeft;
-					}
 					if (switchPosition == 'R') {
 						curPlay = AutonPlays.startRight_SwitchRight;
+					}
+					if (scalePosition == 'R') {
+						curPlay = AutonPlays.startRight_ScaleRight;
+					}
+					if (switchPosition == 'L' && scalePosition == 'L') {
+						curPlay = AutonPlays.driveForwardOnly;
 					}
 				}
 				if (primaryTarget == target.Scale) {
@@ -858,7 +860,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 6:
-			robotAction(Direction.CUBEACTION, 0, 0, 48, 100, 1, false);
+			robotAction(Direction.CUBEACTION, 0, 0, 48, 100, 0.8, false);
 			autonStep++;
 			break;
 		case 7:
@@ -895,7 +897,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 6:
-			robotAction(Direction.CUBEACTION, 0, 0, 48, 100, 1, false);
+			robotAction(Direction.CUBEACTION, 0, 0, 48, 100, 0.8, false);
 			autonStep++;
 			break;
 		case 7:
@@ -924,7 +926,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 4:
-			robotAction(Direction.CUBEACTION, 0, 0, 84, 0, 1);
+			robotAction(Direction.CUBEACTION, 0, 0, 84, 0, 1, false);
 			autonStep++;
 			break;
 		case 5:
@@ -961,7 +963,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 4:
-			robotAction(Direction.CUBEACTION, 0, 0, 84, 0, 1);
+			robotAction(Direction.CUBEACTION, 0, 0, 84, 0, 1, false);
 			autonStep++;
 			break;
 		case 5:
@@ -1006,7 +1008,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 6:
-			robotAction(Direction.CUBEACTION, 0, 0, 0, 0, 2, false);
+			robotAction(Direction.REVERSE, 15, 60, 0, 0, 2, false);
 			autonStep++;
 			break;
 		case 7:
@@ -1047,7 +1049,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 6:
-			robotAction(Direction.CUBEACTION, 0, 0, 0, 0, 2, false);
+			robotAction(Direction.REVERSE, 15, 60, 0, 0, 2, false);
 			autonStep++;
 			break;
 		case 7:
