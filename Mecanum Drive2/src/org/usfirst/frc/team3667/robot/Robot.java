@@ -47,7 +47,7 @@ public class Robot extends IterativeRobot {
 	// public static final double kPulsesPerRevolution = 256;
 
 	public enum Direction {
-		FORWARD, REVERSE, LEFT, RIGHT, CUBEACTION
+		FORWARD, REVERSE, LEFT, RIGHT, CUBEACTION, ATTAINHEIGHT
 	};
 
 	public enum AutonPlays {
@@ -278,16 +278,6 @@ public class Robot extends IterativeRobot {
 		executeAutonomousCommandCompendium();
 	}
 
-	private Boolean adjustHeightPeriodic(double height, boolean heightAttained) {
-		if (heightAttained) {
-			_lift.set(0);
-			_lift2.set(0);
-		} else {
-			return adjustHeightPeriodic(height);
-		}
-		return heightAttained;
-	}
-
 	private Boolean adjustHeightPeriodic(double height) {
 		// Global to track if we are going up or down and set motor to hold lift
 		// in position.
@@ -330,8 +320,12 @@ public class Robot extends IterativeRobot {
 		} else {
 			quitinTime = System.currentTimeMillis() + 7000;
 		}
-		boolean heightAttained = true;
 		switch (driveDirection) {
+		case ATTAINHEIGHT:
+			boolean heightAttained = false;   // This will fall out as soon as height is attained
+			while (System.currentTimeMillis() < quitinTime && !heightAttained) {
+				heightAttained = adjustHeightPeriodic(height);
+			}
 		case CUBEACTION:
 			while (System.currentTimeMillis() < quitinTime) {
 				adjustHeightPeriodic(height);
@@ -355,7 +349,7 @@ public class Robot extends IterativeRobot {
 						&& rightEncoder.getDistance() >= startingRightEncoder + distance) {
 					_drive.arcadeDrive(powerPercent * -.01, correctionRotation);
 				}
-				heightAttained = adjustHeightPeriodic(height);
+				adjustHeightPeriodic(height);
 				cubeActionPeriodic(cubeActionPercent);
 			}
 			break;
@@ -370,7 +364,7 @@ public class Robot extends IterativeRobot {
 					&& rightEncoder.getDistance() >= startingRightEncoder - distance && distance > 0
 					&& System.currentTimeMillis() < quitinTime) {
 				_drive.arcadeDrive(powerPercent * -.01, correctionRotation);
-				heightAttained = adjustHeightPeriodic(height);
+				adjustHeightPeriodic(height);
 				cubeActionPeriodic(cubeActionPercent);
 			}
 			break;
@@ -378,14 +372,14 @@ public class Robot extends IterativeRobot {
 			if (powerPercent > 85)
 				powerPercent = 85;
 			targetDegree = lastValidDirection - distance;
-			while (targetDegree < imu.getAngleZ() && heightAttained && System.currentTimeMillis() < quitinTime) {
+			while (targetDegree < imu.getAngleZ() && System.currentTimeMillis() < quitinTime) {
 				// check if within 10 degrees and if so slow turn
 				if (Math.abs(targetDegree - imu.getAngleZ()) > 10) {
 					_drive.arcadeDrive(0, powerPercent * -.01);
 				} else {
 					_drive.arcadeDrive(0, -.5);
 				}
-				heightAttained = adjustHeightPeriodic(height);
+				adjustHeightPeriodic(height);
 				cubeActionPeriodic(cubeActionPercent);
 			}
 			lastValidDirection -= distance;
@@ -398,14 +392,14 @@ public class Robot extends IterativeRobot {
 			if (powerPercent > 85)
 				powerPercent = 85;
 			turnDegree = lastValidDirection + distance;
-			while (turnDegree > imu.getAngleZ() && heightAttained && System.currentTimeMillis() < quitinTime) {
+			while (turnDegree > imu.getAngleZ() && System.currentTimeMillis() < quitinTime) {
 				// check if within 10 degrees and if so slow turn
 				if (Math.abs(turnDegree - imu.getAngleZ()) > 10) {
 					_drive.arcadeDrive(0, powerPercent * .01);
 				} else {
 					_drive.arcadeDrive(0, .5);
 				}
-				heightAttained = adjustHeightPeriodic(height);
+				adjustHeightPeriodic(height);
 				cubeActionPeriodic(cubeActionPercent);
 			}
 			lastValidDirection += distance;
@@ -566,9 +560,9 @@ public class Robot extends IterativeRobot {
 					if (switchPosition == 'L') {
 						curPlay = AutonPlays.startLeft_SwitchLeft;
 					}
-					if (switchPosition == 'R') {
-						curPlay = AutonPlays.startLeft_SwitchRight;
-					}
+					//if (switchPosition == 'R') {
+						//curPlay = AutonPlays.startLeft_SwitchRight;
+					//}
 				}
 			}
 			if (startPosition == startingPosition.Center) {
@@ -600,9 +594,9 @@ public class Robot extends IterativeRobot {
 					}
 				}
 				if (primaryTarget == target.Switch) {
-					if (switchPosition == 'L') {
-						curPlay = AutonPlays.startRight_SwitchLeft;
-					}
+					//if (switchPosition == 'L') {
+						//curPlay = AutonPlays.startRight_SwitchLeft;
+					//}
 					if (switchPosition == 'R') {
 						curPlay = AutonPlays.startRight_SwitchRight;
 					}
@@ -754,7 +748,8 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 6:
-			robotAction(Direction.FORWARD, 175, 75, 0, 0, 0);
+			//robotAction(Direction.FORWARD, 175, 75, 0, 0, 0);
+			robotAction(Direction.FORWARD, 75, 75, 0, 0, 0);
 			autonStep++;
 			break;
 		// case 7:
@@ -803,7 +798,8 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 6:
-			robotAction(Direction.FORWARD, 175, 75, 0, 0, 0);
+			//robotAction(Direction.FORWARD, 175, 75, 0, 0, 0);
+			robotAction(Direction.FORWARD, 75, 75, 0, 0, 0);
 			autonStep++;
 			break;
 		// case 7:
@@ -869,11 +865,11 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 8:
-			robotAction(Direction.REVERSE, 12, 60, -99, 0, 0, false);
+			robotAction(Direction.REVERSE, 12, 65, -99, 0, 0, false);
 			autonStep++;
 			break;
 		case 9:
-			robotAction(Direction.REVERSE, 36, 60, 0, 0, 0, false);
+			robotAction(Direction.REVERSE, 36, 65, 0, 0, 0, false);
 			autonStep++;
 			break;
 		case 10:
@@ -881,35 +877,39 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 11:
-			robotAction(Direction.FORWARD, 35, 60, 0, -100, 0, false);
+			robotAction(Direction.FORWARD, 49, 65, 0, -100, 0, false);
 			autonStep++;
 			break;
 		case 12:
-			robotAction(Direction.REVERSE, 35, 60, 0, 0, 0, false);
+			robotAction(Direction.CUBEACTION, 0, 0, 0, -100, 0.4, false);
 			autonStep++;
 			break;
 		case 13:
-			robotAction(Direction.LEFT, 45, 60, 0, 0, 0, false);
+			robotAction(Direction.REVERSE, 48, 65, 0, 0, 0, false);
 			autonStep++;
 			break;
 		case 14:
-			robotAction(Direction.FORWARD, 48, 60, 48, 0, 0, false);
+			robotAction(Direction.LEFT, 45, 60, 0, 0, 0, false);
 			autonStep++;
 			break;
 		case 15:
-			robotAction(Direction.CUBEACTION, 0, 0, 48, 0, 0.2, false);
+			robotAction(Direction.FORWARD, 10, 65, 0, 0, 0, false);
 			autonStep++;
 			break;
 		case 16:
-			robotAction(Direction.CUBEACTION, 0, 0, 48, 100, 0.2, false);
+			robotAction(Direction.FORWARD, 38, 65, 48, 0, 0, false);
 			autonStep++;
 			break;
 		case 17:
-			robotAction(Direction.REVERSE, 12, 60, -99, 0, 0, false);
+			robotAction(Direction.CUBEACTION, 0, 0, -99, 100, 0.2, false);
 			autonStep++;
 			break;
 		case 18:
-			robotAction(Direction.CUBEACTION, 0, 0, 0, 0, .4, false);
+			robotAction(Direction.REVERSE, 12, 65, -99, 0, 0);
+			autonStep++;
+			break;
+		case 19:
+			robotAction(Direction.CUBEACTION, 0, 0, 0, 0, 0.4);
 			autonStep++;
 			break;
 		}
@@ -946,11 +946,11 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 8:
-			robotAction(Direction.REVERSE, 12, 60, -99, 0, 0, false);
+			robotAction(Direction.REVERSE, 12, 65, -99, 0, 0, false);
 			autonStep++;
 			break;
 		case 9:
-			robotAction(Direction.REVERSE, 36, 60, 0, 0, 0, false);
+			robotAction(Direction.REVERSE, 36, 65, 0, 0, 0, false);
 			autonStep++;
 			break;
 		case 10:
@@ -958,35 +958,39 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 11:
-			robotAction(Direction.FORWARD, 35, 60, 0, -100, 0, false);
+			robotAction(Direction.FORWARD, 49, 65, 0, -100, 0, false);
 			autonStep++;
 			break;
 		case 12:
-			robotAction(Direction.REVERSE, 35, 60, 0, 0, 0, false);
+			robotAction(Direction.CUBEACTION, 0, 0, 0, -100, 0.4, false);
 			autonStep++;
 			break;
 		case 13:
-			robotAction(Direction.RIGHT, 45, 60, 0, 0, 0, false);
+			robotAction(Direction.REVERSE, 48, 65, 0, 0, 0, false);
 			autonStep++;
 			break;
 		case 14:
-			robotAction(Direction.FORWARD, 48, 60, 48, 0, 0, false);
+			robotAction(Direction.RIGHT, 45, 60, 0, 0, 0, false);
 			autonStep++;
 			break;
 		case 15:
-			robotAction(Direction.CUBEACTION, 0, 0, 48, 0, 0.2, false);
+			robotAction(Direction.FORWARD, 10, 65, 0, 0, 0, false);
 			autonStep++;
 			break;
 		case 16:
-			robotAction(Direction.CUBEACTION, 0, 0, 48, 100, 0.2, false);
+			robotAction(Direction.FORWARD, 38, 65, 48, 0, 0, false);
 			autonStep++;
 			break;
 		case 17:
-			robotAction(Direction.REVERSE, 12, 60, -99, 0, 0, false);
+			robotAction(Direction.CUBEACTION, 0, 0, -99, 100, 0.2, false);
 			autonStep++;
 			break;
 		case 18:
-			robotAction(Direction.CUBEACTION, 0, 0, 0, 0, .4, false);
+			robotAction(Direction.REVERSE, 12, 60, -99, 0, 0);
+			autonStep++;
+			break;
+		case 19:
+			robotAction(Direction.CUBEACTION, 0, 0, 0, 0, 0.4);
 			autonStep++;
 			break;
 		}
@@ -995,72 +999,84 @@ public class Robot extends IterativeRobot {
 	private void startLeftScaleLeft() {
 		switch (autonStep) {
 		case 1:
-			robotAction(Direction.FORWARD, 198, 80, 0, 0, 0);
+			robotAction(Direction.FORWARD, 138, 90, 0, 0, 0);
 			autonStep++;
 			break;
 		case 2:
-			robotAction(Direction.RIGHT, 30, 60, 0, 0, 0);
+			robotAction(Direction.FORWARD, 60, 70, 84, 0, 0);
 			autonStep++;
 			break;
 		case 3:
-			robotAction(Direction.FORWARD, 10, 60, 84, 0, 0);
+			robotAction(Direction.RIGHT, 30, 60, 84, 0, 0);
 			autonStep++;
 			break;
 		case 4:
-			robotAction(Direction.CUBEACTION, 0, 0, 84, 0, 1, false);
+			robotAction(Direction.FORWARD, 10, 60, 84, 0, 0);
 			autonStep++;
 			break;
 		case 5:
-			robotAction(Direction.FORWARD, 22, 50, 84, 0, 0, false);
+			robotAction(Direction.ATTAINHEIGHT, 0, 0, 84, 0, 0); // Phil H - This is new
 			autonStep++;
 			break;
 		case 6:
-			robotAction(Direction.CUBEACTION, 0, 0, 84, 100, 0.5, false);
+			robotAction(Direction.FORWARD, 22, 60, 84, 0, 0, false);
 			autonStep++;
 			break;
 		case 7:
-			robotAction(Direction.REVERSE, 22, 50, 84, 0, 0, false);
+			robotAction(Direction.CUBEACTION, 0, 0, 84, 100, 0.3, false);
 			autonStep++;
 			break;
 		case 8:
-			robotAction(Direction.CUBEACTION, 0, 0, 0, 0, 0.6, false);
+			robotAction(Direction.REVERSE, 22, 50, 84, 0, 0, false);
+			autonStep++;
+			break;
+		case 9:
+			robotAction(Direction.CUBEACTION, 0, 0, 0, 0, 0.4, false);
 			autonStep++;
 			break;
 		// The Second Cube (tm)
-		case 9:
-			robotAction(Direction.RIGHT, 105, 60, 0, 0, 0, false);
-			autonStep++;
-			break;
 		case 10:
-			robotAction(Direction.FORWARD, 45, 60, 0, -100, 0, false);
+			robotAction(Direction.RIGHT, 135, 60, 0, 0, 0, false);
 			autonStep++;
 			break;
 		case 11:
-			robotAction(Direction.REVERSE, 45, 60, 0, 0, 0, false);
+			robotAction(Direction.FORWARD, 30, 75, 0, -100, 0, false);
 			autonStep++;
 			break;
 		case 12:
-			robotAction(Direction.LEFT, 105, 60, 84, 0, 0, false);
+			robotAction(Direction.FORWARD, 10, 60, 0, -100, 0, false);
 			autonStep++;
 			break;
 		case 13:
-			robotAction(Direction.CUBEACTION, 0, 0, 84, 0, 0.5, false);
+			robotAction(Direction.CUBEACTION, 0, 0, 0, -100, 0.25, false);
 			autonStep++;
 			break;
 		case 14:
-			robotAction(Direction.FORWARD, 22, 50, 84, 0, 0, false);
+			robotAction(Direction.REVERSE, 40, 70, 0, 0, 0);
 			autonStep++;
 			break;
 		case 15:
-			robotAction(Direction.CUBEACTION, 0, 0, 84, 100, 0.5, false);
+			robotAction(Direction.LEFT, 135, 60, 84, 0, 0);
 			autonStep++;
 			break;
 		case 16:
-			robotAction(Direction.REVERSE, 22, 50, 84, 0, 0);
+			robotAction(Direction.ATTAINHEIGHT, 0, 0, 84, 0, 0);
 			autonStep++;
 			break;
 		case 17:
-			robotAction(Direction.CUBEACTION, 0, 0, 0, 0, 0.6);
+			robotAction(Direction.FORWARD, 22, 50, 84, 0, 0, false);
+			autonStep++;
+			break;
+		case 18:
+			robotAction(Direction.CUBEACTION, 0, 0, 84, 100, 0.3, false);
+			autonStep++;
+			break;
+		case 19:
+			robotAction(Direction.REVERSE, 22, 50, 84, 0, 0);
+			autonStep++;
+			break;
+		case 20:
+			robotAction(Direction.CUBEACTION, 0, 0, 0, 0, 1);
 			autonStep++;
 			break;
 		}
@@ -1170,7 +1186,7 @@ public class Robot extends IterativeRobot {
 			robotAction(Direction.LEFT, 90, 60, 0, 0, 0, false);
 			autonStep++;
 			break;
-		case 8:
+			/*		case 8:
 			robotAction(Direction.FORWARD, 60, 60, 0, 0, 0, false);
 			autonStep++;
 			break;
@@ -1178,7 +1194,7 @@ public class Robot extends IterativeRobot {
 			robotAction(Direction.RIGHT, 135, 60, 0, 0, 0, false);
 			autonStep++;
 			break;
-			// The Second Powah Cube (tm)
+		// The Second Powah Cube (tm)
 		case 10:
 			robotAction(Direction.FORWARD, 48, 60, 0, -100, 0, false);
 			autonStep++;
@@ -1198,7 +1214,7 @@ public class Robot extends IterativeRobot {
 		case 14:
 			robotAction(Direction.CUBEACTION, 0, 0, 0, 0, 0.5);
 			autonStep++;
-			break;
+			break;*/
 		}
 	}
 
@@ -1232,16 +1248,16 @@ public class Robot extends IterativeRobot {
 			robotAction(Direction.RIGHT, 90, 60, 0, 0, 0, false);
 			autonStep++;
 			break;
-		case 8:
+/*		case 8:
 			robotAction(Direction.FORWARD, 60, 60, 0, 0, 0, false);
 			autonStep++;
 			break;
 		case 9:
 			robotAction(Direction.LEFT, 135, 60, 0, 0, 0, false);
 			autonStep++;
-			break;
-			// The Second Cube of Powah (tm, copyright 2018, patent pending, etc)
-		case 10:
+			break;*/
+		// The Second Cube of Powah (tm, copyright 2018, patent pending, etc)
+		/*case 10:
 			robotAction(Direction.FORWARD, 48, 60, 0, -100, 0, false);
 			autonStep++;
 			break;
@@ -1260,11 +1276,11 @@ public class Robot extends IterativeRobot {
 		case 14:
 			robotAction(Direction.CUBEACTION, 0, 0, 0, 0, 0.5);
 			autonStep++;
-			break;
+			break;*/
 		}
 	}
-	
+
 	// Super Secret Auton Sequence... to be done, probably, right here
 	// this is supposedly to make the robot dance
-	
+
 }
