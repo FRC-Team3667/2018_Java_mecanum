@@ -206,13 +206,16 @@ public class Robot extends IterativeRobot {
 		}
 
 		// Logic to Lift and Lower
-		double curLiftVal = _cubeController.getRawAxis(1) * -1.0;
-		if (curLiftVal > .2 && !limitSwitchHigh.get()) {
-			_lift.set(curLiftVal * 0.9);
-			_lift2.set(curLiftVal * 0.9);
-		} else if (curLiftVal < .2 && !limitSwitchLow.get()) {
+		double curLiftVal = _cubeController.getRawAxis(1) * -0.8;
+		if (curLiftVal > 0.1 && !limitSwitchHigh.get()) {
 			_lift.set(curLiftVal);
 			_lift2.set(curLiftVal);
+		} else if (curLiftVal < -0.1 && !limitSwitchLow.get()) {
+			_lift.set(curLiftVal * 0.5);
+			_lift2.set(curLiftVal * 0.5);
+		} else if (curLiftVal > 0.1 && limitSwitchHigh.get()) {
+			_lift.set(0.07);
+			_lift2.set(0.07);
 		} else {
 			_lift.set(0);
 			_lift2.set(0);
@@ -224,7 +227,7 @@ public class Robot extends IterativeRobot {
 		// Basic logic to drive the robot
 		if (!limitSwitchLow.get()) {
 			// Slow the robot down when not at low position on lift
-			_drive.arcadeDrive(_driveController.getRawAxis(1) * -0.75, _driveController.getRawAxis(4) * 0.75);
+			_drive.arcadeDrive(_driveController.getRawAxis(1) * -0.68, _driveController.getRawAxis(4) * 0.68);
 		} else {
 			// FULL SPEED!!! robot drive (not quite hyper speed though)
 			_drive.arcadeDrive(_driveController.getRawAxis(1) * -1, _driveController.getRawAxis(4) * 0.75);
@@ -287,14 +290,14 @@ public class Robot extends IterativeRobot {
 		// in position.
 		Boolean heightAttained = false;
 		if (height > 0 && !limitSwitchHigh.get()) {
-			_lift.set(1.0);
-			_lift2.set(1.0);
+			_lift.set(.8);
+			_lift2.set(.8);
 		} else if (height == 0 && !limitSwitchLow.get()) {
-			_lift.set(-1.0);
-			_lift2.set(-1.0);
+			_lift.set(-.4);
+			_lift2.set(-.4);
 		} else {
-			_lift.set(0);
-			_lift2.set(0);
+			_lift.set(.07);
+			_lift2.set(.07);
 			heightAttained = true;
 		}
 		return heightAttained;
@@ -322,7 +325,7 @@ public class Robot extends IterativeRobot {
 		if (minDuration != 0) {
 			quitinTime = System.currentTimeMillis() + (long) (minDuration * 1000);
 		} else {
-			quitinTime = System.currentTimeMillis() + 7000;
+			quitinTime = System.currentTimeMillis() + 4000;
 		}
 		switch (driveDirection) {
 		// case ATTAINHEIGHT:
@@ -340,7 +343,7 @@ public class Robot extends IterativeRobot {
 		case FORWARD:
 			while (leftEncoder.getDistance() <= (startingLeftEncoder + distance)
 					&& rightEncoder.getDistance() <= (startingRightEncoder + distance) && distance > 0
-					&& System.currentTimeMillis() < quitinTime) {
+					&& System.currentTimeMillis() < quitinTime && !isOperatorControl()) {
 				double correctionRotation = 0;
 				if (lastValidDirection - imu.getAngleZ() > 1) {
 					correctionRotation = 0.4;
@@ -367,7 +370,7 @@ public class Robot extends IterativeRobot {
 			}
 			while (leftEncoder.getDistance() >= startingLeftEncoder - distance
 					&& rightEncoder.getDistance() >= startingRightEncoder - distance && distance > 0
-					&& System.currentTimeMillis() < quitinTime) {
+					&& System.currentTimeMillis() < quitinTime && !isOperatorControl()) {
 				_drive.arcadeDrive(powerPercent * -.01, correctionRotation);
 				adjustHeightPeriodic(height);
 				cubeActionPeriodic(cubeActionPercent);
@@ -881,7 +884,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 10:
-			robotAction(Direction.RIGHT, 45, 60, 0, 0, 0, false);
+			robotAction(Direction.RIGHT, 43, 60, 0, 0, 0, false);
 			autonStep++;
 			break;
 		case 11:
@@ -970,7 +973,7 @@ public class Robot extends IterativeRobot {
 			autonStep++;
 			break;
 		case 10:
-			robotAction(Direction.LEFT, 43, 60, 0, 0, 0, false);
+			robotAction(Direction.LEFT, 40, 60, 0, 0, 0, false);
 			autonStep++;
 			break;
 		case 11:
